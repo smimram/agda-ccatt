@@ -43,7 +43,7 @@ data _∼_ {n : ℕ} {Γ : Con n} : {A : Ty n} → Tm Γ A → Tm Γ A → Type 
 -- _∙_ = ∼trans
 
 postulate
-  -- TODO
+  -- TODO: we do not formalize pasting schemes for now and simply assume that pasting schemes are contractible
   PSTm : {n : ℕ} {Γ : Con n} {A : Ty n} → PS Γ A → Tm Γ A
   PSEq : {n : ℕ} {Γ : Con n} {A : Ty n} (ps : PS Γ A) (t u : Tm Γ A) → t ∼ u
 

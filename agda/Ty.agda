@@ -94,7 +94,7 @@ data _∈_ {n : ℕ} (A : Ty n) : Con n → Set where
   drop : {Γ : Con n} {B : Ty n} → A ∈ Γ → A ∈ (Γ ▹ B)
 
 postulate
-  -- TODO
+  -- TODO: we do not formalize pasting schemes for now and simply assume that the necessary types are pasting
   PS : {n : ℕ} (Γ : Con n) (A : Ty n) → Set
   PS⊢X⇒X : PS {n = 1} ε (X (# 0) ⇒ X (# 0))
   PS⊢X⇒Y⇒X : PS {n = 2} ε (X (# 0) ⇒ X (# 1) ⇒ X (# 0))
