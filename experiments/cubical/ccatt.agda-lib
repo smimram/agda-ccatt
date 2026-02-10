@@ -1,0 +1,8 @@
+name: cccatt
+include: .
+depend: cubical
+flags:
+  --allow-unsolved-metas
+  --cubical
+  --guardedness
+  --rewriting
