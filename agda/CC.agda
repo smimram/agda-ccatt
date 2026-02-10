@@ -93,6 +93,8 @@ _∼Sub_   : {n n' : ℕ} {τ : SubTy n n'} {Γ : Con n} {Γ' : Con n'} → Sub 
 data _∼_ {n : ℕ} {Γ : Con n} : {A : Ty n} → Tm Γ A → Tm Γ A → Type where
   eqv : {A : Ty n} (x : A ∈ Γ) → var x ∼ var x
   eq  : {n' : ℕ} {Γ' : Con n'} {A : Ty n'} (ps : PS Γ' A) (t u : Tm Γ' A) (τ : SubTy n n') {σ σ' : Sub τ Γ Γ'} (p : _∼Sub_ {Γ = Γ} σ σ') → t [ σ ] ∼ u [ σ' ]
+  -- TODO: can this be derived???
+  ∼trans : {A : Ty n} {t u v : Tm Γ A} (p : t ∼ u) (q : u ∼ v) → t ∼ v
 
 -- simple variant of eq without ∼ for substitution
 eqs : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {A : Ty n'} (ps : PS Γ' A) (t u : Tm Γ' A) (τ : SubTy n n') (σ : Sub τ Γ Γ') → t [ σ ] ∼ u [ σ ]
@@ -111,11 +113,12 @@ eqs' ps t τ p = eq ps t t τ p
 ∼sym : {n : ℕ} {Γ : Con n} {A : Ty n} {t u : Tm Γ A} → t ∼ u → u ∼ t
 ∼sym (eqv x) = eqv x
 ∼sym (eq ps t u τ p) = eq ps u t τ (∼SubSym p)
+∼sym (∼trans p q) = ∼trans (∼sym q) (∼sym p)
 
-∼trans : {n : ℕ} {Γ : Con n} {A : Ty n} {t u v : Tm Γ A} → t ∼ u → u ∼ v → t ∼ v
-∼trans (eqv x) q = q
-∼trans (eq ps t u τ p) q = {!!}
-  -- basically, if q is (eqv x), we are as above, and if q is eq then we can use the same eq ps for both
+-- ∼trans : {n : ℕ} {Γ : Con n} {A : Ty n} {t u v : Tm Γ A} → t ∼ u → u ∼ v → t ∼ v
+-- ∼trans (eqv x) q = q
+-- ∼trans (eq ps t u τ p) q = {!!}
+  -- -- basically, if q is (eqv x), we are as above, and if q is eq then we can use the same eq ps for both
 
 _∼Sub_ {Γ' = ε} σ σ' = Unit
 _∼Sub_ {Γ = Γ} {Γ' = Γ' ▹ A} (σ , t) (σ' , t') = (_∼Sub_ {Γ = Γ} σ σ') × t ∼ t'

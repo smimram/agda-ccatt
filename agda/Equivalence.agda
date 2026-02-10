@@ -22,6 +22,7 @@ F (CC.coh ps τ σ) = CL.PSTm ps CL.[ FSub σ ]
 F∼ (CC.eqv x) = CL.∼refl
 F∼ {Γ = Γ} (CC.eq ps t u τ {σ = σ} {σ'} p) = subst₂ CL._∼_ (FSub≡ t σ) (FSub≡ u σ') ((CL.PSEq ps (F t) (F u)) CL.[ F∼Sub {Γ = Γ} p ]∼)
   -- subst₂ CL._∼_ (sym (FSub∼ t σ)) (sym (FSub∼ u σ)) (CL.PSEq ps (F t) (F u) CL.[ FSub σ ]∼)
+F∼ (CC.∼trans p q) = CL.∼trans (F∼ p) (F∼ q)
 
 FSub {Γ' = ε} σ = tt
 FSub {Γ' = Γ' ▹ A} (σ , t) = FSub σ , F t
