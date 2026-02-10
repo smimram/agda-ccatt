@@ -38,10 +38,6 @@ data _∼_ {n : ℕ} {Γ : Con n} : {A : Ty n} → Tm Γ A → Tm Γ A → Type 
   ∼sym : {A : Ty n} {t u : Tm Γ A} → t ∼ u → u ∼ t
   ∼trans : {A : Ty n} {t u v : Tm Γ A} → t ∼ u → u ∼ v → t ∼ v
 
--- infixr 30 _∙_
--- _∙_ : {n : ℕ} {Γ : Con n} {A : Ty n} {t u v : Tm Γ A} → t ∼ u → u ∼ v → t ∼ v
--- _∙_ = ∼trans
-
 postulate
   -- TODO: we do not formalize pasting schemes for now and simply assume that pasting schemes are contractible
   PSTm : {n : ℕ} {Γ : Con n} {A : Ty n} → PS Γ A → Tm Γ A
