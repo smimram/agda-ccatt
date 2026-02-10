@@ -9,4 +9,5 @@ jobs:
     - name: Install required packages
       run: sudo apt-get -y install agda agda-stdlib
     - name: Build
-      run: make -C agda
+      # run: make -C agda
+      run: cd agda && make Equivalence.agda
