@@ -46,10 +46,10 @@ _∘_ : {n : ℕ} {Γ : Con n} {n' : ℕ} {Γ' : Con n'} {n'' : ℕ} {Γ'' : Con
 _∘_ {Γ'' = ε} σ' σ = tt
 _∘_ {Γ'' = Γ'' ▹ A} (σ' , t) σ = σ' ∘ σ , t [ σ ]
 
-postulate
-  -- this is standard material
-  [∘] : {n n' n'' : ℕ} {Γ : Con n} {Γ' : Con n'} {Γ'' : Con n''} {A : Ty n''} {t : Tm Γ'' A} {τ : SubTy n n'} {σ : Sub τ Γ Γ'} {τ' : SubTy n' n''} {σ' : Sub τ' Γ' Γ''} →
-        (t [ σ' ] [ σ ]) ≡ t [ σ' ∘ σ ]
+-- this is standard material
+[∘] : {n n' n'' : ℕ} {Γ : Con n} {Γ' : Con n'} {Γ'' : Con n''} {A : Ty n''} {t : Tm Γ'' A} {τ : SubTy n n'} {σ : Sub τ Γ Γ'} {τ' : SubTy n' n''} {σ' : Sub τ' Γ' Γ''} →
+      (t [ σ' ] [ σ ]) ≡ t [ σ' ∘ σ ]
+[∘] = {!!}
 
 var here [ σ , t ] = t
 var (drop x) [ σ , t ] = var x [ σ ]
