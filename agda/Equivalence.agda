@@ -7,6 +7,8 @@ open import Ty
 import CC
 import CL
 
+--- From CC to CL
+
 F     : {n : ℕ} {Γ : Con n} {A : Ty n} → CC.Tm Γ A → CL.Tm Γ A
 F∼    : {n : ℕ} {Γ : Con n} {A : Ty n} {t u : CC.Tm Γ A} → t CC.∼ u → F t CL.∼ F u
 FSub  : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {τ : SubTy n n'} → CC.Sub τ Γ Γ' → CL.Sub τ Γ Γ'
@@ -21,7 +23,6 @@ F (CC.coh ps τ σ) = CL.PSTm ps CL.[ FSub σ ]
 
 F∼ (CC.eqv x) = CL.∼refl
 F∼ {Γ = Γ} (CC.eq ps t u τ {σ = σ} {σ'} p) = subst₂ CL._∼_ (FSub≡ t σ) (FSub≡ u σ') ((CL.PSEq ps (F t) (F u)) CL.[ F∼Sub {Γ = Γ} p ]∼)
-  -- subst₂ CL._∼_ (sym (FSub∼ t σ)) (sym (FSub∼ u σ)) (CL.PSEq ps (F t) (F u) CL.[ FSub σ ]∼)
 F∼ (CC.∼trans p q) = CL.∼trans (F∼ p) (F∼ q)
 
 FSub {Γ' = ε} σ = tt
@@ -36,6 +37,8 @@ F∼Sub {Γ' = Γ' ▹ A} (p , q) = F∼Sub p , F∼ q
 
 FSub∘ {Γ'' = ε} σ' σ = refl
 FSub∘ {Γ'' = Γ'' ▹ A} (σ' , t') σ = Σ-≡,≡→≡ (FSub∘ σ' σ , substConst _ _ ∙ FSub≡ t' σ)
+
+--- From CL to CC
 
 G : {n : ℕ} {Γ : Con n} {A : Ty n} → CL.Tm Γ A → CC.Tm Γ A
 G {n} {Γ} (CL.var x) = CC.var x
@@ -70,6 +73,8 @@ GSub≡ CL.I σ = refl
 GSub≡ CL.K σ = refl
 GSub≡ CL.S σ = refl
 GSub≡ (t CL.$ u) σ = cong₂ CC.ap (GSub≡ t σ) (GSub≡ u σ)
+
+--- F and G are mutually inverse functions
 
 GF : {n : ℕ} {Γ : Con n} {A : Ty n} (t : CC.Tm Γ A) → G (F t) CC.∼ t
 GFSub : {n n' : ℕ} {τ : SubTy n n'} {Γ : Con n} {Γ' : Con n'} (σ : CC.Sub τ Γ Γ') → GSub (FSub σ) CC.∼Sub σ
