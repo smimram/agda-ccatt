@@ -148,6 +148,7 @@ data Con₂ {n : ℕ} (Γ : Con n) : Set where
   ε₂   : Con₂ Γ
   _▹₂_ : (Δ : Con₂ Γ) {A : Arr n} → Arr₂ Γ A → Con₂ Γ
 
+-- A 2-variable belongs to a context
 data _∈₂_ {n : ℕ} {Γ : Con n} {A : Arr n} (B : Arr₂ Γ A): Con₂ Γ → Set where
   here : {Δ : Con₂ Γ} → B ∈₂ (Δ ▹₂ B)
   drop : {Δ : Con₂ Γ} {C : Arr₂ Γ A} → B ∈₂ Δ → B ∈₂ (Δ ▹₂ C)
@@ -155,6 +156,7 @@ data _∈₂_ {n : ℕ} {Γ : Con n} {A : Arr n} (B : Arr₂ Γ A): Con₂ Γ �
 -- 2-cells
 data Tm₂ {n : ℕ} {Γ : Con n} (Δ : Con₂ Γ) {A : Arr n} : Arr₂ Γ A → Set where
   var₂ : {B : Arr₂ Γ A} → B ∈₂ Δ → Tm₂ Δ B
+  -- coh₂ : {n' : ℕ} {Γ' : Con n'} {A B : Ty n'} (ps : PSArr Γ' (A , B)) (τ : SubTy n n') (σ : Sub τ Γ Γ') → Tm Γ (A [ τ ]' , B [ τ ]')
 
 -- -- simple variant of eq without ⇒ for substitution
 -- eqs : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {A : Arr n'} (ps : PSArr Γ' A) (t u : Tm Γ' A) (τ : SubTy n n') (σ : Sub τ Γ Γ') → t [ σ ] ⇒ u [ σ ]
