@@ -21,6 +21,7 @@ obj Γ = Pred.obj (fst Γ)
 1cell : (Γ : ctx) → obj Γ → obj Γ → Type
 1cell Γ A B = Pred.term (fst Γ) (A , B)
 
+-- Shape of a 2-dimensional pasting scheme
 pshape : Type
 pshape = List Pred.pshape
 
@@ -83,8 +84,6 @@ vars Γ = Fin (length (snd Γ))
 
 data term where
   var : {Γ : ctx} (v : vars Γ) → term Γ (lookup (snd Γ) v)
-  -- var : {Γ : ctx} {A : type (fst Γ)} → term (fst Γ , A ∷ snd Γ) A
-  -- drop : {Γ : ctx} {A : type (fst Γ)} {B : type (fst Γ)} → term Γ B → term (fst Γ , A ∷ snd Γ) B
   -- coh : {Γ : ctx} (S : Pred.pshape) (P : Pred.ps (fst Γ) S) (t u : Pred.term (fst Γ) (Pred.ps-hom P)) → 2cell Γ t u
   -- coh' : {Γ : Pred.ctx} {S : Pred.pshape} (P : Pred.ps Γ S) (t : Pred.term Γ (Pred.ps-hom P)) → 2cell (Γ , []) t (Pred.coh P) -- + reversibility
   coh : {Γ : ctx} (S : pshape) (P : ps Γ S) (t : Pred.term (fst Γ) (Pred.ps-hom (ps-src P))) (u : Pred.term (fst Γ) (Pred.ps-hom (ps-tgt P))) → 2cell Γ (Pred.subst-tgt (ps-glob-tgt P) t) u
