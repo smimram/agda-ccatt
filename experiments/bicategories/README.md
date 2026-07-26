@@ -20,3 +20,11 @@ consisting of 3 composable arrow. A *pasting scheme* of this shape is actually t
 $$
 x \overset f\to x \overset f\to x \overset f\to x
 $$
+
+## Coherences
+
+With this version, already in dimension 2, it seems difficult to express coherences. A naive (and wrong) approach (which is the one currently implemented) would consists in saying
+
+> given a 2-dimensional pasting scheme $π$, a term $f$ in $∂⁻(π)$ and a term $g$ in $∂⁺(π)$, we have a coherence $f ⇒ g$.
+
+This is however wrong because we are considering substituted ps. For instance, in the shape of a 2-globe, consider the pasting scheme $α : f ⇒ f : x → x$ (where $f$ is an endomorphism). We do not expect to have a coherence from $f∘f ⇒ f$ for instance.
