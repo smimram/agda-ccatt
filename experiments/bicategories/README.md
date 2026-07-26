@@ -28,3 +28,9 @@ With this version, already in dimension 2, it seems difficult to express coheren
 > given a 2-dimensional pasting scheme $π$, a term $f$ in $∂⁻(π)$ and a term $g$ in $∂⁺(π)$, we have a coherence $f ⇒ g$.
 
 This is however wrong because we are considering substituted ps. For instance, in the shape of a 2-globe, consider the pasting scheme $α : f ⇒ f : x → x$ (where $f$ is an endomorphism). We do not expect to have a coherence from $f∘f ⇒ f$ for instance.
+
+What we really mean is
+
+> given a 2-dimensional pasting scheme $π$, a composite $f$ of $∂⁻(π)$ and a composite $g$ of $∂⁺(π)$, we have a coherence $f ⇒ g$
+
+but we do not currently have the notion of "being a composite of a pasting scheme".
