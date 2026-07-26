@@ -39,4 +39,4 @@ but we do not currently have the notion of "being a composite of a pasting schem
 
 but we would need to make sure that in a 1-dimensional pasting scheme $π$, any composite of $π$ is equivalent to the canonical composite of $π$ (which is roughly the same problem as before).
 
-Can this be made to work?
+Can this be made to work? One way would be to state the naive approach only in the canonical pasting scheme associated to a pasting shape and close under substitution, but we would loose most of the benefit of working with builtin substituted pasting schemes...
