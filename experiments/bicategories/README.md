@@ -5,7 +5,7 @@ We show that there is an equivalence between
 - 2-dimensional models of CaTT
 - bicategories
 
-This is done by implementing polygraphs (in low dimensions) as a type-theoretic structure.
+This is done by implementing polygraphs (in low dimensions) as a nice type-theoretic structure.
 
 ## Pasting schemes
 
@@ -37,4 +37,6 @@ but we do not currently have the notion of "being a composite of a pasting schem
 
 > given a 2-dimensional pasting scheme $π$, writing $f$ for the composite of $∂⁻(π)$ and $g$ for the composite of $∂⁺(π)$, we have a coherence $f ⇒ g$
 
-but we would need to make sure that in a 1-dimensional pasting scheme $π$, any composite of $π$ is equivalent to the canonical composite of $π$.
+but we would need to make sure that in a 1-dimensional pasting scheme $π$, any composite of $π$ is equivalent to the canonical composite of $π$ (which is roughly the same problem as before).
+
+Can this be made to work?
