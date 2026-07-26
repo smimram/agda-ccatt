@@ -33,4 +33,8 @@ What we really mean is
 
 > given a 2-dimensional pasting scheme $π$, a composite $f$ of $∂⁻(π)$ and a composite $g$ of $∂⁺(π)$, we have a coherence $f ⇒ g$
 
-but we do not currently have the notion of "being a composite of a pasting scheme".
+but we do not currently have the notion of "being a composite of a pasting scheme". What we have however is *the* canonical composite of a pasting scheme so that we could axiomatize
+
+> given a 2-dimensional pasting scheme $π$, writing $f$ for the composite of $∂⁻(π)$ and $g$ for the composite of $∂⁺(π)$, we have a coherence $f ⇒ g$
+
+but we would need to make sure that in a 1-dimensional pasting scheme $π$, any composite of $π$ is equivalent to the canonical composite of $π$.
