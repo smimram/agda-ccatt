@@ -15,4 +15,8 @@ $$
 x → y → z → w
 $$
 
-consisting of 3 composable arrow. A *pasting scheme* of this shape is actually the data of a substitution toward this pasting shape, ie the data of 4 0-cells and 3-cells as above, with no restriction. For instance, given an endomorphism $f : x → x$
+consisting of 3 composable arrow. A *pasting scheme* of this shape is actually the data of a substitution toward this pasting shape, ie the data of 4 0-cells and 3-cells as above, with no restriction. For instance, given an endomorphism $f : x → x$, we have a pasting scheme
+
+$$
+x \overset f\to x \overset f\to x \overset f\to x
+$$
