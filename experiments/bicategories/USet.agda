@@ -15,12 +15,16 @@ import UProp as Pred
 type : (Γ : Pred.ctx) → Type
 type Γ = Pred.term Γ × Pred.term Γ
 
+-- A type weakened by adding a 0-variable
 wk0-type : {Γ : Pred.ctx} → type Γ → type (Pred.add0 Γ)
 wk0-type A = Product.map Pred.wk0ap Pred.wk0ap A
 
 -- A context
 ctx : Type
 ctx = Σ Pred.ctx (List ∘ type)
+
+ctx-pred : ctx → Pred.ctx
+ctx-pred = fst
 
 -- The empty context
 ctx-empty : ctx
@@ -114,22 +118,6 @@ wk0 {Γ' , Γ} = Pred.wk0 , σ Γ -- à peu près sub-id
 -- The shape of a pasting scheme is the number of arrows we compose
 pshape : Type
 pshape = ℕ
-
--- {-# TERMINATING #-}
--- ps-from : {Γ : Pred.ctx} (n : Pred.term Γ) → List (type Γ)
--- ps-from zero = []
--- ps-from (suc n) = (suc n , inject₁ n) ∷ ps-from (inject₁ n)
-
--- ps : pshape → ctx
--- ps n = suc n , ps-from (fromℕ n)
-
--- ps-src : (S : pshape) → obj (ps S)
--- ps-src n = fromℕ n
-
--- ps-tgt : (S : pshape) → obj (ps S)
--- ps-tgt S = Fin.zero
-
---- TODO: the following would be in theory a much nicer way to define ps
 
 -- Extend a context by a shape with given starting 0-cell
 ps-from : pshape → (Γ : ctx) → obj Γ → ctx
