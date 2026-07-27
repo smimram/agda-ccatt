@@ -9,7 +9,7 @@ open import Data.Product as Product
 open import Data.List as List
 open import Data.Fin as Fin
 
-import UProp as Pred
+import Prop as Pred
 
 -- A type in a Prop-context is an arrow xᵢ→yᵢ
 type : (Γ : Pred.ctx) → Type
@@ -73,6 +73,13 @@ sub1-lookup : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub1 Δ Γ 
 sub1-lookup {Γ = Γ' , (A , B) ∷ Γ} σ zero = fst σ
 sub1-lookup {Γ = Γ' , (A , B) ∷ Γ} σ (suc i) = sub1-lookup (snd σ) i
 
+-- A 1-substitution is determined by the images of the variables
+sub1-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
+          (f : (i : vars Γ) → term Δ (Pred.sub-ap σ' (lookup (snd Γ) i .fst) , Pred.sub-ap σ' (lookup (snd Γ) i .snd)))
+        → sub1 Δ Γ σ'
+sub1-mk {Γ = Γ' , []} σ' f = tt
+sub1-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero , sub1-mk {Γ = Γ' , Γ} σ' (f ∘ suc)
+
 sub1-ap : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub1 Δ Γ σ') {A B : obj Γ} → 1cell Γ A B → 1cell Δ (Pred.sub-ap σ' A) (Pred.sub-ap σ' B)
 
 -- Composite substiutition
@@ -94,26 +101,22 @@ sub-ap σ a = sub1-ap (σ .snd) a
 sub-comp : {Γ'' Γ' Γ : ctx} (τ : sub Γ'' Γ') (σ : sub Γ' Γ) → sub Γ'' Γ
 sub-comp τ σ = Pred.sub-comp (fst τ) (fst σ) , sub1-comp (τ .snd) (σ .snd)
 
--- -- Substitution corresponding to weakening a 1-variable
--- wk1 : {Γ : ctx} (A : type (fst Γ)) → sub (add1 Γ A) Γ
--- wk1 {Γ = Γ' , []} A = Pred.sub-id Γ' , tt
--- wk1 {Γ = Γ' , x ∷ Γ} A = Pred.sub-id Γ' , {!!} , {!wk1 ?!}
-
--- Substitution corresponding to weakening a 1-variable
+-- Substitution corresponding to weakening a 1-variable (defined below, since it
+-- requires the terms)
 wk1 : (Γ : ctx) (A : type (fst Γ)) → sub1 (add1 Γ A) Γ (Pred.sub-id (fst Γ))
 
 wk1' : {Γ : ctx} (A : type (fst Γ)) → sub (add1 Γ A) Γ
 wk1' {Γ} A = Pred.sub-id (fst Γ) , wk1 Γ A
 
 wk1ap : {Γ : ctx} {X : type (fst Γ)} (A : type (fst Γ)) → term Γ X → term (add1 Γ A) X
-wk1ap A = {!sub-ap (wk1' A)!} -- sub-ap (wk1 A)
+wk1ap {Γ} {X} A a = subst₂ (λ x y → term (add1 Γ A) (x , y)) (Pred.sub-id-ap (fst Γ) (fst X)) (Pred.sub-id-ap (fst Γ) (snd X)) (sub-ap (wk1' A) a)
+
+-- Substitution corresponding to weakening a 0-variable (defined below, since it
+-- requires the terms)
+wk0-1 : (Γ : ctx) → sub1 (add0 Γ) Γ Pred.wk0
 
 wk0 : {Γ : ctx} → sub (add0 Γ) Γ
-wk0 {Γ' , Γ} = Pred.wk0 , σ Γ -- à peu près sub-id
-  where
-  σ : (Γ : _) → sub1 (add0 (Γ' , Γ)) (Γ' , Γ) Pred.wk0
-  σ [] = tt
-  σ (A ∷ Γ) = {!A!} , {!σ Γ!}
+wk0 {Γ} = Pred.wk0 , wk0-1 Γ
 
 -- The shape of a pasting scheme is the number of arrows we compose
 pshape : Type
@@ -154,17 +157,24 @@ data term where
 
 last1 Γ A = var (Fin.fromℕ< {m = 0} (s≤s z≤n))
 
-wk1 (Γ' , []) A = tt
-wk1 (Γ' , x ∷ Γ) A = {!var {Γ = Γ' , x ∷ Γ} (suc zero)!} , {!wk1 (Γ' , Γ) A!}
+-- Weakening sends a variable to the corresponding variable of the extended context
+wk0-1 Γ = sub1-mk Pred.wk0 λ v →
+  let (v' , e) = map-lookup (wk0-type {fst Γ}) (snd Γ) v in
+  subst (term (add0 Γ)) e (var v')
+
+wk1 Γ A = sub1-mk (Pred.sub-id (fst Γ)) λ v →
+  subst₂ (λ x y → term (add1 Γ A) (x , y))
+         (sym (Pred.sub-id-ap (fst Γ) (lookup (snd Γ) v .fst)))
+         (sym (Pred.sub-id-ap (fst Γ) (lookup (snd Γ) v .snd)))
+         (var {Γ = add1 Γ A} (suc v))
 
 sub1-ap σ (var v) = sub1-lookup σ v
 sub1-ap {σ' = σ'} σ (coh S (τ' , τ)) = subst₂ (1cell _) (sym (Pred.sub-comp-ap σ' τ' (ps-src S))) (sym (Pred.sub-comp-ap σ' τ' (ps-tgt S))) (coh S (sub-comp (σ' , σ) (τ' , τ)))
 
+-- Identity 1-cell
 id : {Γ : ctx} {A : obj Γ} → 1cell Γ A A
 id {A = A} = coh 0 (A ∷ [] , tt)
 
+-- Composition of 1-cells
 co : {Γ : ctx} {A B C : obj Γ} (a : 1cell Γ A B) (b : 1cell Γ B C) → 1cell Γ A C
 co {Γ} {A} {B} {C} a b = coh 2 (C ∷ B ∷ A ∷ [] , b , a , tt)
-
--- -- subst-tgt : {Γ : ctx} {A B B' : obj Γ} → B ≡ B' → 1cell Γ A B → 1cell Γ A B'
--- -- subst-tgt {Γ = Γ} {A = A} p = subst (1cell Γ A) p
