@@ -116,7 +116,7 @@ ps S = ps-from0 S ctx-pt (last0 ctx-empty)
 
 ps-src0 : (S : pshape) → UProp.sub (Pred.ctx-pred (Pred.ps (pshape-src S))) (Pred.ctx-pred (ctx-pred (ps S)))
 ps-src0 [] = # 0 ∷ []
-ps-src0 (S' ∷ S) = ?
+ps-src0 (S' ∷ S) = {!!}
 
 ps-src1 : (S : pshape) → Pred.sub1 (Pred.ps (pshape-src S)) (ctx-pred (ps S)) {!ps-src0 S!}
 ps-src1 S = {!!}
@@ -125,22 +125,30 @@ ps-src1 S = {!!}
 ps-src : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-src S))) (ps S)
 ps-src S = {!!} , {!!}
 
-
--- ps : pshape → ctx
--- ps S = (ps0 S , ps1 S) , ps2 S
-  -- where
-  -- ps0 : pshape → UProp.ctx
-  -- ps0 S = suc (length S)
-  -- ps1 : (S : pshape) → List (Pred.type (ps0 S))
-  -- ps1 [] = []
-  -- ps1 (S' ∷ S) = List.replicate (suc S') (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _)) ++ List.map (Product.map inject₁ inject₁) (ps1 S)
-  -- ps2 : (S : pshape) → List (type (ps0 S , ps1 S))
-  -- ps2 [] = []
-  -- ps2 (S' ∷ S) = {!!} ++ List.map (Product.map (Product.map inject₁ inject₁) {!!}) (ps2 S)
-    -- where
-    -- suml : List ℕ → ℕ
-    -- suml [] = 0
-    -- suml (n ∷ l) = suc n + suml l
+-- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
+-- EX: [3,2] has
+-- - 0-cells: 2 1 0
+-- - 1-cells: in hom(1,0) : 0 1 / in hom(2,1) : 2 3 4
+-- - 1-cells: 0 ⇒ 1, 2 ⇒ 3, 3 ⇒ 4
+ps' : pshape → ctx
+ps' S = (ps0 S , ps1 S) , ps2 S
+  where
+  ps0 : pshape → UProp.ctx
+  ps0 S = suc (length S)
+  ps1 : (S : pshape) → List (Pred.type (ps0 S))
+  ps1 [] = []
+  ps1 (S' ∷ S) =
+    List.replicate (suc S') (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _)) ++
+    List.map (Product.map inject₁ inject₁) (ps1 S)
+  ps2 : (S : pshape) → List (type (ps0 S , ps1 S))
+  ps2 [] = []
+  ps2 (S' ∷ S) =
+    {!!} ++
+    List.map (Product.map (Product.map inject₁ inject₁) {!!}) (ps2 S)
+    where
+    suml : List ℕ → ℕ
+    suml [] = 0
+    suml (n ∷ l) = suc n + suml l
 
 data term where
   var : {Γ : ctx} (v : vars Γ) → term Γ (lookup (snd Γ) v)
