@@ -15,10 +15,10 @@ type : Pred.ctx → Type
 type Γ = Σ (Pred.type (fst Γ)) λ A → Pred.term Γ A × Pred.term Γ A
 
 wk0-type : {Γ : Pred.ctx} → type Γ → type (Pred.add0 Γ)
-wk0-type A = Product.map {!!} {!!} A -- Pred.sub-ap Pred.wk0
+wk0-type A = Product.map Pred.wk0-type (λ a → Pred.sub-ap Pred.wk0 (fst a) , Pred.sub-ap Pred.wk0 (snd a)) A
 
 wk1-type : {Γ : Pred.ctx} (A : Pred.type (fst Γ)) → type Γ → type (Pred.add1 Γ A)
-wk1-type X A = Product.map {!!} {!!} A
+wk1-type X A = Product.map (λ Y → Y) (λ a → Pred.wk1ap X (fst a) , Pred.wk1ap X (snd a)) A
 
 ctx : Type
 ctx = Σ Pred.ctx (List ∘ type)
@@ -114,20 +114,164 @@ ps-from0 (S' ∷ S) Γ x = ps-from0 S (ps-from1 S' Γ' a) (transport (sym (ps-fr
 ps : pshape → ctx
 ps S = ps-from0 S ctx-pt (last0 ctx-empty)
 
-ps-src0 : (S : pshape) → UProp.sub (Pred.ctx-pred (Pred.ps (pshape-src S))) (Pred.ctx-pred (ctx-pred (ps S)))
-ps-src0 [] = # 0 ∷ []
-ps-src0 (S' ∷ S) = {!!}
+-- A column of 2-cells only adds 1- and 2-cells: a substitution toward a context
+-- Δ can thus be pushed along it
+ps-from1-wk : (S : Pred.pshape) (Γ : ctx) {A B : obj Γ} (a : 1cell Γ A B)
+              (Δ : Pred.ctx) (σ : Pred.sub (fst Γ) Δ) → Pred.sub (fst (ps-from1 S Γ a)) Δ
+ps-from1-wk zero Γ a Δ σ = σ
+ps-from1-wk (suc S) Γ {A} {B} a Δ σ = ps-from1-wk S (add2 (add1 Γ X) (X , Pred.wk1ap X a , b)) b Δ (Pred.sub-comp (Pred.wk1' X) σ)
+  where
+  X = (A , B)
+  b = last1 Γ X
 
-ps-src1 : (S : pshape) → Pred.sub1 (Pred.ps (pshape-src S)) (ctx-pred (ps S)) (ps-src0 S)
-ps-src1 S = {!!}
+-- Pushing a substitution along a column does not change the image of the 0-cells
+ps-from1-wk-ap : (S : Pred.pshape) (Γ : ctx) {A B : obj Γ} (a : 1cell Γ A B)
+                 (Δ : Pred.ctx) (σ : Pred.sub (fst Γ) Δ) (z : Pred.obj Δ)
+               → UProp.sub-ap (fst (ps-from1-wk S Γ a Δ σ)) z ≡ transport (sym (ps-from1-obj S Γ a)) (UProp.sub-ap (fst σ) z)
+ps-from1-wk-ap zero Γ a Δ σ z = refl
+ps-from1-wk-ap (suc S) Γ {A} {B} a Δ σ z =
+  trans
+    (ps-from1-wk-ap S Γ₂ b Δ (Pred.sub-comp (Pred.wk1' X) σ) z)
+    (cong (transport (sym (ps-from1-obj S Γ₂ b)))
+          (trans (sym (UProp.sub-comp-ap (UProp.sub-id (fst (fst Γ))) (fst σ) z))
+                 (UProp.sub-id-ap (fst (fst Γ)) (UProp.sub-ap (fst σ) z))))
+  where
+  X = (A , B)
+  b = last1 Γ X
+  Γ₂ = add2 (add1 Γ X) (X , Pred.wk1ap X a , b)
+
+-- The last 1-cell of a column (its source being the 1-cell we started with)
+ps-from1-last : (S : Pred.pshape) (Γ : ctx) {A B : obj Γ} (a : 1cell Γ A B)
+              → 1cell (ps-from1 S Γ a) (transport (sym (ps-from1-obj S Γ a)) A) (transport (sym (ps-from1-obj S Γ a)) B)
+ps-from1-last zero Γ a = a
+ps-from1-last (suc S) Γ {A} {B} a = ps-from1-last S (add2 (add1 Γ X) (X , Pred.wk1ap X a , b)) b
+  where
+  X = (A , B)
+  b = last1 Γ X
+
+-- Inclusion of the source into the ps, generalized to an arbitrary starting
+-- point: we thread a substitution σ toward the linear pasting scheme being
+-- built, x being the image of its last 0-cell y. The i-th arrow of the linear
+-- scheme is sent to the first 1-cell of the i-th column.
+ps-src-from : (S : pshape) (Γ : ctx) (x : obj Γ) (Δ : Pred.ctx) (y : Pred.obj Δ)
+              (σ : Pred.sub (fst Γ) Δ) (p : x ≡ UProp.sub-ap (fst σ) y)
+            → Pred.sub (fst (ps-from0 S Γ x)) (Pred.ps-from (length S) Δ y)
+ps-src-from [] Γ x Δ y σ p = σ
+ps-src-from (S' ∷ S) Γ x Δ y σ p = ps-src-from S Γ₁ x₁ Δ₁ (Pred.last0 Δ) τ p₁
+  where
+  -- the extension of Γ by the new 0-cell, the new 1-cell and its column
+  A : Pred.type (fst (fst (add0 Γ)))
+  A = UProp.wk0ap x , last0 Γ
+  Γ' : ctx
+  Γ' = add1 (add0 Γ) A
+  a : 1cell Γ' (UProp.wk0ap x) (last0 Γ)
+  a = last1 (add0 Γ) A
+  Γ₁ : ctx
+  Γ₁ = ps-from1 S' Γ' a
+  x₁ : obj Γ₁
+  x₁ = transport (sym (ps-from1-obj S' Γ' a)) (last0 Γ)
+  -- the corresponding extension of Δ
+  B : Pred.type (fst (Pred.add0 Δ))
+  B = UProp.wk0ap y , Pred.last0 Δ
+  Δ₁ : Pred.ctx
+  Δ₁ = Pred.add1 (Pred.add0 Δ) B
+  -- the weakening from Γ to Γ', along which σ is transported, and which is then
+  -- extended by the new 0-cell
+  wk : Pred.sub (fst Γ') (fst Γ)
+  wk = Pred.sub-comp (Pred.wk1' A) Pred.wk0
+  σ̂ : Pred.sub (fst Γ') Δ
+  σ̂ = Pred.sub-comp wk σ
+  σ₀ : Pred.sub (fst Γ') (Pred.add0 Δ)
+  σ₀ = Pred.sub-add0 σ̂ (last0 Γ)
+  -- the new 0-cell of Δ is sent to the new 0-cell of Γ, so that the new 1-cell
+  -- of Δ can be sent to the new 1-cell a of Γ
+  q : UProp.sub-ap (fst σ₀) (UProp.wk0ap y) ≡ UProp.wk0ap x
+  q = trans (Pred.sub-ap-add0 (fst σ̂) (last0 Γ) y)
+      (trans (sym (UProp.sub-comp-ap (fst wk) (fst σ) y))
+      (trans (cong (UProp.sub-ap (fst wk)) (sym p))
+      (trans (sym (UProp.sub-comp-ap (UProp.sub-id (fst (fst (add0 Γ)))) UProp.wk0 x))
+             (UProp.sub-id-ap (fst (fst (add0 Γ))) (UProp.wk0ap x)))))
+  a' : 1cell Γ' (UProp.sub-ap (fst σ₀) (fst B)) (UProp.sub-ap (fst σ₀) (snd B))
+  a' = subst (λ u → 1cell Γ' u (last0 Γ)) (sym q) a
+  -- ...and pushed along the column
+  τ : Pred.sub (fst Γ₁) Δ₁
+  τ = ps-from1-wk S' Γ' a Δ₁ (Pred.sub-add1 σ₀ a')
+  p₁ : x₁ ≡ UProp.sub-ap (fst τ) (Pred.last0 Δ)
+  p₁ = sym (ps-from1-wk-ap S' Γ' a Δ₁ (Pred.sub-add1 σ₀ a') (Pred.last0 Δ))
+
+-- Inclusion of the target into the ps: as above, but the i-th arrow is now sent
+-- to the last 1-cell of the i-th column
+ps-tgt-from : (S : pshape) (Γ : ctx) (x : obj Γ) (Δ : Pred.ctx) (y : Pred.obj Δ)
+              (σ : Pred.sub (fst Γ) Δ) (p : x ≡ UProp.sub-ap (fst σ) y)
+            → Pred.sub (fst (ps-from0 S Γ x)) (Pred.ps-from (length S) Δ y)
+ps-tgt-from [] Γ x Δ y σ p = σ
+ps-tgt-from (S' ∷ S) Γ x Δ y σ p = ps-tgt-from S Γ₁ x₁ Δ₁ (Pred.last0 Δ) (Pred.sub-add1 τ₀ b') p₁
+  where
+  A : Pred.type (fst (fst (add0 Γ)))
+  A = UProp.wk0ap x , last0 Γ
+  Γ' : ctx
+  Γ' = add1 (add0 Γ) A
+  a : 1cell Γ' (UProp.wk0ap x) (last0 Γ)
+  a = last1 (add0 Γ) A
+  Γ₁ : ctx
+  Γ₁ = ps-from1 S' Γ' a
+  x₁ : obj Γ₁
+  x₁ = transport (sym (ps-from1-obj S' Γ' a)) (last0 Γ)
+  B : Pred.type (fst (Pred.add0 Δ))
+  B = UProp.wk0ap y , Pred.last0 Δ
+  Δ₁ : Pred.ctx
+  Δ₁ = Pred.add1 (Pred.add0 Δ) B
+  wk : Pred.sub (fst Γ') (fst Γ)
+  wk = Pred.sub-comp (Pred.wk1' A) Pred.wk0
+  σ̂ : Pred.sub (fst Γ') Δ
+  σ̂ = Pred.sub-comp wk σ
+  σ₀ : Pred.sub (fst Γ') (Pred.add0 Δ)
+  σ₀ = Pred.sub-add0 σ̂ (last0 Γ)
+  q : UProp.sub-ap (fst σ₀) (UProp.wk0ap y) ≡ UProp.wk0ap x
+  q = trans (Pred.sub-ap-add0 (fst σ̂) (last0 Γ) y)
+      (trans (sym (UProp.sub-comp-ap (fst wk) (fst σ) y))
+      (trans (cong (UProp.sub-ap (fst wk)) (sym p))
+      (trans (sym (UProp.sub-comp-ap (UProp.sub-id (fst (fst (add0 Γ)))) UProp.wk0 x))
+             (UProp.sub-id-ap (fst (fst (add0 Γ))) (UProp.wk0ap x)))))
+  -- here we first push the substitution along the column, so that we can send
+  -- the new 1-cell of Δ to the last 1-cell of the column
+  τ₀ : Pred.sub (fst Γ₁) (Pred.add0 Δ)
+  τ₀ = ps-from1-wk S' Γ' a (Pred.add0 Δ) σ₀
+  e1 : UProp.sub-ap (fst τ₀) (UProp.wk0ap y) ≡ transport (sym (ps-from1-obj S' Γ' a)) (UProp.wk0ap x)
+  e1 = trans (ps-from1-wk-ap S' Γ' a (Pred.add0 Δ) σ₀ (UProp.wk0ap y))
+             (cong (transport (sym (ps-from1-obj S' Γ' a))) q)
+  e2 : UProp.sub-ap (fst τ₀) (Pred.last0 Δ) ≡ x₁
+  e2 = ps-from1-wk-ap S' Γ' a (Pred.add0 Δ) σ₀ (Pred.last0 Δ)
+  b' : 1cell Γ₁ (UProp.sub-ap (fst τ₀) (fst B)) (UProp.sub-ap (fst τ₀) (snd B))
+  b' = subst₂ (1cell Γ₁) (sym e1) (sym e2) (ps-from1-last S' Γ' a)
+  p₁ : x₁ ≡ UProp.sub-ap (fst (Pred.sub-add1 τ₀ b')) (Pred.last0 Δ)
+  p₁ = sym e2
+
+ps-src' : (S : pshape) → Pred.sub (ctx-pred (ps S)) (Pred.ps (pshape-src S))
+ps-src' S = ps-src-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , tt) refl
+
+ps-src0 : (S : pshape) → UProp.sub (Pred.ctx-pred (ctx-pred (ps S))) (Pred.ctx-pred (Pred.ps (pshape-src S)))
+ps-src0 S = fst (ps-src' S)
+
+ps-src1 : (S : pshape) → Pred.sub1 (ctx-pred (ps S)) (Pred.ps (pshape-src S)) (ps-src0 S)
+ps-src1 S = snd (ps-src' S)
 
 -- Inclusion of the source into the ps
-ps-src : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-src S))) (ps S)
-ps-src S = (ps-src0 S , ps-src1 S) , {!!}
+ps-src : (S : pshape) → sub (ps S) (ctx-inc (Pred.ps (pshape-src S)))
+ps-src S = (ps-src0 S , ps-src1 S) , tt
 
--- Inclusion of the source into the ps
-ps-tgt : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-tgt S))) (ps S)
-ps-tgt S = {!!}
+ps-tgt' : (S : pshape) → Pred.sub (ctx-pred (ps S)) (Pred.ps (pshape-tgt S))
+ps-tgt' S = ps-tgt-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , tt) refl
+
+ps-tgt0 : (S : pshape) → UProp.sub (Pred.ctx-pred (ctx-pred (ps S))) (Pred.ctx-pred (Pred.ps (pshape-tgt S)))
+ps-tgt0 S = fst (ps-tgt' S)
+
+ps-tgt1 : (S : pshape) → Pred.sub1 (ctx-pred (ps S)) (Pred.ps (pshape-tgt S)) (ps-tgt0 S)
+ps-tgt1 S = snd (ps-tgt' S)
+
+-- Inclusion of the target into the ps
+ps-tgt : (S : pshape) → sub (ps S) (ctx-inc (Pred.ps (pshape-tgt S)))
+ps-tgt S = (ps-tgt0 S , ps-tgt1 S) , tt
 
 -- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
 -- EX: [3,2] has
@@ -161,12 +305,12 @@ ps-tgt S = {!!}
 -- - 0-cells: 0 1 2
 -- - 1-cells: (0,1) (0,1) (0,1) (1,2) (1,2)
 -- - 1-cells: 0 ⇒ 1, 1 ⇒ 2, 3 ⇒ 4
-ps' : pshape → ctx
-ps' S = {!!} -- (ps0 S , ps1 S) , ps2 S
-  where
-  ps0 : pshape → UProp.ctx
-  ps0 S = suc (length S)
-  ps1 : ℕ → (S : pshape) → List (Pred.type {!!})
+-- ps' : pshape → ctx
+-- ps' S = {!!} -- (ps0 S , ps1 S) , ps2 S
+  -- where
+  -- ps0 : pshape → UProp.ctx
+  -- ps0 S = suc (length S)
+  -- ps1 : ℕ → (S : pshape) → List (Pred.type {!!})
   -- ps1 k [] = []
   -- ps1 (S' ∷ S) =
     -- List.map (Product.map wk wk) (ps1 S) ++

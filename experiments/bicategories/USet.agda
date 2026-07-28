@@ -106,9 +106,40 @@ sub-ap σ a = sub1-ap (σ .snd) a
 sub-comp : {Γ'' Γ' Γ : ctx} (τ : sub Γ'' Γ') (σ : sub Γ' Γ) → sub Γ'' Γ
 sub-comp τ σ = Pred.sub-comp (fst τ) (fst σ) , sub1-comp (τ .snd) (σ .snd)
 
+sub1-id : (Γ : ctx) → sub1 Γ Γ (Pred.sub-id (ctx-pred Γ))
+sub1-id (Γ , []) = tt
+sub1-id (Γ , A ∷ Δ) = {!!} , {!!}
+
+-- Identity substitution
+sub-id : (Γ : ctx) → sub Γ Γ
+sub-id Γ = (Pred.sub-id (ctx-pred Γ)) , sub1-id Γ
+
 -- Inclusion of prop substitutions
 sub-inc : {Γ' Γ : Pred.ctx} (σ : Pred.sub Γ' Γ) → sub (ctx-inc Γ') (ctx-inc Γ)
 sub-inc σ = σ , tt
+
+-- Extending a substitution by a 0-cell does not change the image of the other
+-- 0-variables
+sub-ap-add0 : {Δ Γ : Pred.ctx} (σ' : Pred.sub Δ Γ) (z : Pred.term Δ) (x : Pred.term Γ)
+            → Pred.sub-ap (z ∷ σ') (Pred.wk0ap x) ≡ Pred.sub-ap σ' x
+sub-ap-add0 σ' z x = cong (Pred.sub-ap (z ∷ σ')) (Pred.wk0-ap x)
+
+-- Extend a substitution by the image of a new 0-cell: the 1-cells are the old
+-- ones, whose type has to be transported along the above
+sub-add0-1 : {Θ : ctx} (Δ : ctx) {σ' : Pred.sub (fst Θ) (fst Δ)} (σ : sub1 Θ Δ σ') (z : obj Θ) → sub1 Θ (add0 Δ) (z ∷ σ')
+sub-add0-1 (Δ' , []) σ z = tt
+sub-add0-1 {Θ} (Δ' , (A , B) ∷ Δ) {σ'} (a , σ) z =
+  subst₂ (1cell Θ) (sym (sub-ap-add0 σ' z A)) (sym (sub-ap-add0 σ' z B)) a ,
+  sub-add0-1 (Δ' , Δ) σ z
+
+sub-add0 : {Θ Δ : ctx} (σ : sub Θ Δ) (z : obj Θ) → sub Θ (add0 Δ)
+sub-add0 {Δ = Δ} σ z = z ∷ fst σ , sub-add0-1 Δ (snd σ) z
+
+-- Extend a substitution by the image of a new 1-cell (the 0-part is unchanged)
+sub-add1 : {Θ Δ : ctx} (σ : sub Θ Δ) {X : type (fst Δ)}
+           (a : 1cell Θ (Pred.sub-ap (fst σ) (fst X)) (Pred.sub-ap (fst σ) (snd X)))
+         → sub Θ (add1 Δ X)
+sub-add1 σ a = fst σ , a , snd σ
 
 -- Substitution corresponding to weakening a 1-variable (defined below, since it
 -- requires the terms)

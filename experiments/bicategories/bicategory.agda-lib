@@ -1,4 +1,4 @@
 name: bicategory
 include: .
 depend: standard-library
-flags: --allow-unsolved-metas --rewriting
+flags: --rewriting
