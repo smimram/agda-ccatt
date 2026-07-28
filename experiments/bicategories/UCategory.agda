@@ -118,12 +118,16 @@ ps-src0 : (S : pshape) → UProp.sub (Pred.ctx-pred (Pred.ps (pshape-src S))) (P
 ps-src0 [] = # 0 ∷ []
 ps-src0 (S' ∷ S) = {!!}
 
-ps-src1 : (S : pshape) → Pred.sub1 (Pred.ps (pshape-src S)) (ctx-pred (ps S)) {!ps-src0 S!}
+ps-src1 : (S : pshape) → Pred.sub1 (Pred.ps (pshape-src S)) (ctx-pred (ps S)) (ps-src0 S)
 ps-src1 S = {!!}
 
 -- Inclusion of the source into the ps
 ps-src : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-src S))) (ps S)
-ps-src S = {!!} , {!!}
+ps-src S = (ps-src0 S , ps-src1 S) , {!!}
+
+-- Inclusion of the source into the ps
+ps-tgt : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-tgt S))) (ps S)
+ps-tgt S = {!!}
 
 -- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
 -- EX: [3,2] has
@@ -158,11 +162,11 @@ ps-src S = {!!} , {!!}
 -- - 1-cells: (0,1) (0,1) (0,1) (1,2) (1,2)
 -- - 1-cells: 0 ⇒ 1, 1 ⇒ 2, 3 ⇒ 4
 ps' : pshape → ctx
-ps' S = ? -- (ps0 S , ps1 S) , ps2 S
+ps' S = {!!} -- (ps0 S , ps1 S) , ps2 S
   where
   ps0 : pshape → UProp.ctx
   ps0 S = suc (length S)
-  ps1 : ℕ → (S : pshape) → List (Pred.type ?)
+  ps1 : ℕ → (S : pshape) → List (Pred.type {!!})
   -- ps1 k [] = []
   -- ps1 (S' ∷ S) =
     -- List.map (Product.map wk wk) (ps1 S) ++
