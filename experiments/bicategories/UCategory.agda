@@ -23,11 +23,19 @@ wk1-type X A = Product.map {!!} {!!} A
 ctx : Type
 ctx = Σ Pred.ctx (List ∘ type)
 
+-- Underlying set context
+ctx-pred : ctx → Pred.ctx
+ctx-pred = fst
+
+-- Includsion of set contexts
+ctx-inc : Pred.ctx → ctx
+ctx-inc Γ = Γ , []
+
 ctx-empty : ctx
-ctx-empty = Pred.ctx-empty , []
+ctx-empty = ctx-inc Pred.ctx-empty
 
 ctx-pt : ctx
-ctx-pt = Pred.ctx-pt , []
+ctx-pt = ctx-inc Pred.ctx-pt
 
 data term : (Γ : ctx) (A : type (fst Γ)) → Type
 
@@ -43,21 +51,27 @@ obj Γ = Pred.obj (fst Γ)
 2cell : (Γ : ctx) {A B : obj Γ} (a b : 1cell Γ A B) → Type
 2cell Γ a b = term Γ (_ , a , b)
 
+-- Add a 0-generator
 add0 : ctx → ctx
 add0 (Γ' , Γ) = Pred.add0 Γ' , List.map wk0-type Γ
 
+-- Add a 1-generator
 add1 : (Γ : ctx) (A : Pred.type (fst (fst Γ))) → ctx
 add1 (Γ' , Γ) A = (Pred.add1 Γ' A) , List.map (wk1-type A) Γ
 
+-- Add a 2-generator
 add2 : (Γ : ctx) (A : type (fst Γ)) → ctx
 add2 (Γ' , Γ) A = Γ' , A ∷ Γ
 
+-- The 0-generator we just added
 last0 : (Γ : ctx) → obj (add0 Γ)
 last0 Γ = Pred.last0 (fst Γ)
 
+-- The 1-generator we just added
 last1 : (Γ : ctx) (A : Pred.type (fst (fst Γ))) → Pred.term (fst (add1 Γ A)) A
 last1 Γ A = Pred.last1 (fst Γ) A
 
+-- The 2-generator we just added
 last2 : (Γ : ctx) (A : type (fst Γ)) → term (add2 Γ A) A
 
 sub2 : (Δ Γ : ctx) → Pred.sub (fst Δ) (fst Γ) → Type
@@ -67,6 +81,7 @@ sub2 Δ (Γ' , (A , a , b) ∷ Γ) σ' = 2cell Δ (Pred.sub-ap σ' a) (Pred.sub-
 sub : ctx → ctx → Type
 sub Δ Γ = Σ (Pred.sub (fst Δ) (fst Γ)) (sub2 Δ Γ)
 
+-- Shape of a pasting scheme
 pshape : Type
 pshape = List Pred.pshape
 
@@ -74,7 +89,7 @@ pshape-src : pshape → Pred.pshape
 pshape-src S = length S
 
 pshape-tgt : pshape → Pred.pshape
-pshape-tgt S = pshape-src S
+pshape-tgt = pshape-src
 
 ps-from1 : Pred.pshape → (Γ : ctx) {A B : obj Γ} (a : 1cell Γ A B) → ctx
 ps-from1 zero Γ a = Γ
@@ -99,6 +114,18 @@ ps-from0 (S' ∷ S) Γ x = ps-from0 S (ps-from1 S' Γ' a) (transport (sym (ps-fr
 ps : pshape → ctx
 ps S = ps-from0 S ctx-pt (last0 ctx-empty)
 
+ps-src0 : (S : pshape) → UProp.sub (Pred.ctx-pred (Pred.ps (pshape-src S))) (Pred.ctx-pred (ctx-pred (ps S)))
+ps-src0 [] = # 0 ∷ []
+ps-src0 (S' ∷ S) = ?
+
+ps-src1 : (S : pshape) → Pred.sub1 (Pred.ps (pshape-src S)) (ctx-pred (ps S)) {!ps-src0 S!}
+ps-src1 S = {!!}
+
+-- Inclusion of the source into the ps
+ps-src : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-src S))) (ps S)
+ps-src S = {!!} , {!!}
+
+
 -- ps : pshape → ctx
 -- ps S = (ps0 S , ps1 S) , ps2 S
   -- where
@@ -117,7 +144,7 @@ ps S = ps-from0 S ctx-pt (last0 ctx-empty)
 
 data term where
   var : {Γ : ctx} (v : vars Γ) → term Γ (lookup (snd Γ) v)
-  coh : {Γ : ctx} (S : pshape) (σ : sub Γ (ps S)) (t : 1cell (ps S) {!ps-src (ps S)!} {!!}) (u : {!!}) → 2cell Γ {!!} {!!}
+  coh : {Γ : ctx} (S : pshape) (σ : sub Γ (ps S)) (t : 1cell (ps S) {!ps-src (ps S)!} {!!}) (u : 1cell (ps S) {!!} {!!}) → 2cell Γ {!!} {!!}
 
 last2 Γ A = var zero
 

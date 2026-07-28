@@ -23,8 +23,13 @@ wk0-type A = Product.map Pred.wk0ap Pred.wk0ap A
 ctx : Type
 ctx = Σ Pred.ctx (List ∘ type)
 
+-- Inderlying prop context
 ctx-pred : ctx → Pred.ctx
 ctx-pred = fst
+
+-- Inclusion of a prop context
+ctx-inc : Pred.ctx → ctx
+ctx-inc Γ = Γ , []
 
 -- The empty context
 ctx-empty : ctx
@@ -100,6 +105,10 @@ sub-ap σ a = sub1-ap (σ .snd) a
 -- Compose substitutions
 sub-comp : {Γ'' Γ' Γ : ctx} (τ : sub Γ'' Γ') (σ : sub Γ' Γ) → sub Γ'' Γ
 sub-comp τ σ = Pred.sub-comp (fst τ) (fst σ) , sub1-comp (τ .snd) (σ .snd)
+
+-- Inclusion of prop substitutions
+sub-inc : {Γ' Γ : Pred.ctx} (σ : Pred.sub Γ' Γ) → sub (ctx-inc Γ') (ctx-inc Γ)
+sub-inc σ = σ , tt
 
 -- Substitution corresponding to weakening a 1-variable (defined below, since it
 -- requires the terms)
