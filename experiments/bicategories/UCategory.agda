@@ -128,27 +128,56 @@ ps-src S = {!!} , {!!}
 -- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
 -- EX: [3,2] has
 -- - 0-cells: 2 1 0
--- - 1-cells: in hom(1,0) : 0 1 / in hom(2,1) : 2 3 4
--- - 1-cells: 0 ⇒ 1, 2 ⇒ 3, 3 ⇒ 4
+-- - 1-cells: (1,0) (1,0) (2,1) (2,1) (2,1)
+-- - 1-cells: 2 ⇒ 3, 3 ⇒ 4, 0 ⇒ 1
+-- (lists are "reversed" wrt the natural order)
+-- ps' : pshape → ctx
+-- ps' S = (ps0 S , ps1 S) , ps2 S
+  -- where
+  -- ps0 : pshape → UProp.ctx
+  -- ps0 S = suc (length S)
+  -- ps1 : (S : pshape) → List (Pred.type (ps0 S))
+  -- ps1 [] = []
+  -- ps1 (S' ∷ S) =
+    -- List.map (Product.map wk wk) (ps1 S) ++
+    -- List.replicate (suc S') (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _))
+    -- where
+    -- wk = inject₁
+  -- ps2 : (S : pshape) → List (type (ps0 S , ps1 S))
+  -- ps2 [] = []
+  -- ps2 (S' ∷ S) =
+    -- List.map (Product.map wk λ x → {!!} , {!!}) (ps2 S) ++
+    -- List.applyUpTo (λ i → (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _)) , {!!} , {!!}) S'
+    -- where
+    -- wk : Pred.type (ps0 S) → Pred.type (ps0 (S' ∷ S))
+    -- wk = {!!}
+
+-- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
+-- EX: [3,2] has
+-- - 0-cells: 0 1 2
+-- - 1-cells: (0,1) (0,1) (0,1) (1,2) (1,2)
+-- - 1-cells: 0 ⇒ 1, 1 ⇒ 2, 3 ⇒ 4
 ps' : pshape → ctx
-ps' S = (ps0 S , ps1 S) , ps2 S
+ps' S = ? -- (ps0 S , ps1 S) , ps2 S
   where
   ps0 : pshape → UProp.ctx
   ps0 S = suc (length S)
-  ps1 : (S : pshape) → List (Pred.type (ps0 S))
-  ps1 [] = []
-  ps1 (S' ∷ S) =
-    List.replicate (suc S') (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _)) ++
-    List.map (Product.map inject₁ inject₁) (ps1 S)
-  ps2 : (S : pshape) → List (type (ps0 S , ps1 S))
-  ps2 [] = []
-  ps2 (S' ∷ S) =
-    {!!} ++
-    List.map (Product.map (Product.map inject₁ inject₁) {!!}) (ps2 S)
-    where
-    suml : List ℕ → ℕ
-    suml [] = 0
-    suml (n ∷ l) = suc n + suml l
+  ps1 : ℕ → (S : pshape) → List (Pred.type ?)
+  -- ps1 k [] = []
+  -- ps1 (S' ∷ S) =
+    -- List.map (Product.map wk wk) (ps1 S) ++
+    -- List.replicate (suc S') (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _))
+    -- where
+    -- wk = inject₁
+  -- ps2 : (S : pshape) → List (type (ps0 S , ps1 S))
+  -- ps2 [] = []
+  -- ps2 (S' ∷ S) =
+    -- List.map (Product.map wk λ x → {!!} , {!!}) (ps2 S) ++
+    -- List.applyUpTo (λ i → (fromℕ< {m = suc (List.length S)} ≤-refl , fromℕ< {m = List.length S} (n≤1+n _)) , {!!} , {!!}) S'
+    -- where
+    -- wk : Pred.type (ps0 S) → Pred.type (ps0 (S' ∷ S))
+    -- wk = {!!}
+
 
 data term where
   var : {Γ : ctx} (v : vars Γ) → term Γ (lookup (snd Γ) v)
