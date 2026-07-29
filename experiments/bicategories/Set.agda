@@ -45,15 +45,20 @@ data term (Γ : ctx) : (A : type (fst Γ)) → Type where
 subst-tgt : {Γ : ctx} {A B B' : obj Γ} → B ≡ B' → 1cell Γ A B → 1cell Γ A B'
 subst-tgt {Γ = Γ} {A = A} p = subst (1cell Γ A) p
 
--- A 1-substitution with given underlying 0-substitution
-sub1 : (Δ Γ : ctx) → Pred.sub (fst Δ) (fst Γ) → Type
-sub1 Δ (Γ' , []) σ' = ⊤
-sub1 Δ (Γ' , (A , B) ∷ Γ) σ' = 1cell Δ (Pred.sub-ap σ' A) (Pred.sub-ap σ' B) × sub1 Δ (Γ' , Γ) σ'
+-- A 1-substitution with given underlying 0-substitution: a list of 1-cells, one
+-- for each 1-variable of the context (an inductive datatype, so that the
+-- 1-cells it contains are structural subterms)
+infixr 5 _∷_
+data sub1 (Δ : ctx) : (Γ : ctx) → Pred.sub (fst Δ) (fst Γ) → Type where
+  []  : {Γ' : Vars} {σ' : Pred.sub (fst Δ) Γ'} → sub1 Δ (Γ' , []) σ'
+  _∷_ : {Γ' : Vars} {X : type Γ'} {Γ : List (type Γ')} {σ' : Pred.sub (fst Δ) Γ'}
+        (a : 1cell Δ (Pred.sub-ap σ' (fst X)) (Pred.sub-ap σ' (snd X)))
+        (σ : sub1 Δ (Γ' , Γ) σ') → sub1 Δ (Γ' , X ∷ Γ) σ'
 
 -- Image of a variable under a substitution
 sub1-lookup : {Δ Γ : ctx} {σ' : Pred.sub (ctx-pred Δ) (ctx-pred Γ)} (σ : sub1 Δ Γ σ') (i : vars Γ) → term Δ (Pred.sub-ap σ' (lookup (snd Γ) i .fst) , Pred.sub-ap σ' (lookup (snd Γ) i .snd))
-sub1-lookup {Γ = Γ' , (A , B) ∷ Γ} σ zero = fst σ
-sub1-lookup {Γ = Γ' , (A , B) ∷ Γ} σ (suc i) = sub1-lookup (snd σ) i
+sub1-lookup (a ∷ σ) zero = a
+sub1-lookup (a ∷ σ) (suc i) = sub1-lookup σ i
 
 -- A substitution acts on terms: this is where the formal composites get transported
 sub1-ap : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub1 Δ Γ σ') {A B : obj Γ} → 1cell Γ A B → 1cell Δ (Pred.sub-ap σ' A) (Pred.sub-ap σ' B)
@@ -65,16 +70,16 @@ sub1-ap σ (co a b) = co (sub1-ap σ a) (sub1-ap σ b)
 sub1-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
           (f : (i : vars Γ) → term Δ (Pred.sub-ap σ' (lookup (snd Γ) i .fst) , Pred.sub-ap σ' (lookup (snd Γ) i .snd)))
         → sub1 Δ Γ σ'
-sub1-mk {Γ = Γ' , []} σ' f = tt
-sub1-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero , sub1-mk {Γ = Γ' , Γ} σ' (f ∘ suc)
+sub1-mk {Γ = Γ' , []} σ' f = []
+sub1-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero ∷ sub1-mk {Γ = Γ' , Γ} σ' (f ∘ suc)
 
 -- Composite substitution
 sub1-comp : {Γ₁ Γ₂ Γ₃ : ctx}
             {σ' : Pred.sub (ctx-pred Γ₁) (ctx-pred Γ₂)}
             {τ' : Pred.sub (ctx-pred Γ₂) (ctx-pred Γ₃)} →
             sub1 Γ₁ Γ₂ σ' → sub1 Γ₂ Γ₃ τ' → sub1 Γ₁ Γ₃ (Pred.sub-comp σ' τ')
-sub1-comp {Γ₃ = Γ₃' , []} σ tt = tt
-sub1-comp {Γ₁ = Γ₁} {Γ₃ = Γ₃' , (A , B) ∷ Γ₃} {σ'} {τ'} σ (a , τ) = subst₂ (1cell Γ₁) (Pred.sub-comp-ap σ' τ' A) (Pred.sub-comp-ap σ' τ' B) (sub1-ap σ a) , sub1-comp σ τ
+sub1-comp σ [] = []
+sub1-comp {Γ₁ = Γ₁} {Γ₃ = Γ₃' , (A , B) ∷ Γ₃} {σ'} {τ'} σ (a ∷ τ) = subst₂ (1cell Γ₁) (Pred.sub-comp-ap σ' τ' A) (Pred.sub-comp-ap σ' τ' B) (sub1-ap σ a) ∷ sub1-comp σ τ
 
 -- A substitution
 sub : ctx → ctx → Type

@@ -337,7 +337,7 @@ ps-tgt-from (S' ∷ S) Γ x Δ y σ p = ps-tgt-from S Γ₁ x₁ Δ₁ (Pred.las
   p₁ = sym e2
 
 ps-src' : (S : pshape) → Pred.sub (ctx-pred (ps S)) (Pred.ps (pshape-src S))
-ps-src' S = ps-src-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , tt) refl
+ps-src' S = ps-src-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , Pred.[]) refl
 
 ps-src0 : (S : pshape) → UProp.sub (ctx-pred² (ps S)) (Pred.ctx-pred (Pred.ps (pshape-src S)))
 ps-src0 S = fst (ps-src' S)
@@ -350,7 +350,7 @@ ps-src : (S : pshape) → sub (ps S) (ctx-inc (Pred.ps (pshape-src S)))
 ps-src S = (ps-src0 S , ps-src1 S) , tt
 
 ps-tgt' : (S : pshape) → Pred.sub (ctx-pred (ps S)) (Pred.ps (pshape-tgt S))
-ps-tgt' S = ps-tgt-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , tt) refl
+ps-tgt' S = ps-tgt-from S ctx-pt (last0 ctx-empty) Pred.ctx-pt (Pred.last0 Pred.ctx-empty) (Pred.last0 Pred.ctx-empty ∷ [] , Pred.[]) refl
 
 ps-tgt0 : (S : pshape) → UProp.sub (ctx-pred² (ps S)) (Pred.ctx-pred (Pred.ps (pshape-tgt S)))
 ps-tgt0 S = fst (ps-tgt' S)

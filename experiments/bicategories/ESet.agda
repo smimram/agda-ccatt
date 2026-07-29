@@ -42,8 +42,8 @@ g : {Γ : USet.ctx} {A B : USet.obj Γ} → USet.1cell Γ A B → Set.1cell Γ A
 
 -- Translation of a substitution
 gsub1 : {Δ Γ : USet.ctx} {σ' : UProp.sub (USet.ctx-pred Δ) (USet.ctx-pred Γ)} → USet.sub1 Δ Γ σ' → Set.sub1 Δ Γ σ'
-gsub1 {Γ = Γ' , []} σ = tt
-gsub1 {Γ = Γ' , A ∷ Γ} (a , σ) = g a , gsub1 σ
+gsub1 USet.[] = Set.[]
+gsub1 (USet._∷_ a σ) = Set._∷_ (g a) (gsub1 σ)
 
 gsub : {Δ Γ : USet.ctx} → USet.sub Δ Γ → Set.sub Δ Γ
 gsub σ = fst σ , gsub1 (snd σ)
