@@ -200,11 +200,20 @@ ps-src-from (S' ∷ S) Γ x Δ y σ p = ps-src-from S Γ₁ x₁ Δ₁ (Pred.las
   σ₀ = Pred.sub-add0 σ̂ (last0 Γ)
   -- the new 0-cell of Δ is sent to the new 0-cell of Γ, so that the new 1-cell of Δ can be sent to the new 1-cell a of Γ
   q : UProp.sub-ap (Pred.sub-pred σ₀) (UProp.wk0ap y) ≡ UProp.wk0ap x
-  q = trans (Pred.sub-ap-add0 (Pred.sub-pred σ̂) (last0 Γ) y)
-      (trans (sym (UProp.sub-comp-ap (Pred.sub-pred wk) (Pred.sub-pred σ) y))
-      (trans (cong (UProp.sub-ap (Pred.sub-pred wk)) (sym p))
-      (trans (sym (UProp.sub-comp-ap (UProp.sub-id (ctx-pred² (add0 Γ))) UProp.wk0 x))
-             (UProp.sub-id-ap (ctx-pred² (add0 Γ)) (UProp.wk0ap x)))))
+  q =
+    begin
+      UProp.sub-ap (Pred.sub-pred σ₀) (UProp.wk0ap y)
+    ≡⟨ Pred.sub-ap-add0 (Pred.sub-pred σ̂) (last0 Γ) y ⟩
+      UProp.sub-ap (Pred.sub-pred σ̂) y
+    ≡⟨ sym (UProp.sub-comp-ap (Pred.sub-pred wk) (Pred.sub-pred σ) y) ⟩
+      UProp.sub-ap (Pred.sub-pred wk) (UProp.sub-ap (Pred.sub-pred σ) y)
+    ≡⟨ cong (UProp.sub-ap (Pred.sub-pred wk)) (sym p) ⟩
+      UProp.sub-ap (Pred.sub-pred wk) x
+    ≡⟨ sym (UProp.sub-comp-ap (UProp.sub-id (ctx-pred² (add0 Γ))) UProp.wk0 x) ⟩
+      UProp.sub-ap (UProp.sub-id (ctx-pred² (add0 Γ))) (UProp.wk0ap x)
+    ≡⟨ UProp.sub-id-ap (ctx-pred² (add0 Γ)) (UProp.wk0ap x) ⟩
+      UProp.wk0ap x
+    ∎
   a' : 1cell Γ' (UProp.sub-ap (Pred.sub-pred σ₀) (Pred.type-src B)) (UProp.sub-ap (Pred.sub-pred σ₀) (Pred.type-tgt B))
   a' = subst (λ u → 1cell Γ' u (last0 Γ)) (sym q) a
   -- ...and pushed along the column
@@ -242,11 +251,20 @@ ps-tgt-from (S' ∷ S) Γ x Δ y σ p = ps-tgt-from S Γ₁ x₁ Δ₁ (Pred.las
   σ₀ : Pred.sub (ctx-pred Γ') (Pred.add0 Δ)
   σ₀ = Pred.sub-add0 σ̂ (last0 Γ)
   q : UProp.sub-ap (Pred.sub-pred σ₀) (UProp.wk0ap y) ≡ UProp.wk0ap x
-  q = trans (Pred.sub-ap-add0 (Pred.sub-pred σ̂) (last0 Γ) y)
-      (trans (sym (UProp.sub-comp-ap (Pred.sub-pred wk) (Pred.sub-pred σ) y))
-      (trans (cong (UProp.sub-ap (Pred.sub-pred wk)) (sym p))
-      (trans (sym (UProp.sub-comp-ap (UProp.sub-id (ctx-pred² (add0 Γ))) UProp.wk0 x))
-             (UProp.sub-id-ap (ctx-pred² (add0 Γ)) (UProp.wk0ap x)))))
+  q =
+    begin
+      UProp.sub-ap (Pred.sub-pred σ₀) (UProp.wk0ap y)
+    ≡⟨ Pred.sub-ap-add0 (Pred.sub-pred σ̂) (last0 Γ) y ⟩
+      UProp.sub-ap (Pred.sub-pred σ̂) y
+    ≡⟨ sym (UProp.sub-comp-ap (Pred.sub-pred wk) (Pred.sub-pred σ) y) ⟩
+      UProp.sub-ap (Pred.sub-pred wk) (UProp.sub-ap (Pred.sub-pred σ) y)
+    ≡⟨ cong (UProp.sub-ap (Pred.sub-pred wk)) (sym p) ⟩
+      UProp.sub-ap (Pred.sub-pred wk) x
+    ≡⟨ sym (UProp.sub-comp-ap (UProp.sub-id (ctx-pred² (add0 Γ))) UProp.wk0 x) ⟩
+      UProp.sub-ap (UProp.sub-id (ctx-pred² (add0 Γ))) (UProp.wk0ap x)
+    ≡⟨ UProp.sub-id-ap (ctx-pred² (add0 Γ)) (UProp.wk0ap x) ⟩
+      UProp.wk0ap x
+    ∎
   -- here we first push the substitution along the column, so that we can send the new 1-cell of Δ to the last 1-cell of the column
   τ₀ : Pred.sub (ctx-pred Γ₁) (Pred.add0 Δ)
   τ₀ = ps-from1-wk S' Γ' a (Pred.add0 Δ) σ₀
