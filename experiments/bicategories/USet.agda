@@ -15,6 +15,12 @@ import Prop as Pred
 type : (Γ : Pred.ctx) → Type
 type Γ = Pred.term Γ × Pred.term Γ
 
+type-src : {Γ : Pred.ctx} → type Γ → Pred.term Γ
+type-src = fst
+
+type-tgt : {Γ : Pred.ctx} → type Γ → Pred.term Γ
+type-tgt = snd
+
 -- A type weakened by adding a 0-variable
 wk0-type : {Γ : Pred.ctx} → type Γ → type (Pred.add0 Γ)
 wk0-type A = Product.map Pred.wk0ap Pred.wk0ap A
@@ -89,14 +95,17 @@ sub1-ap : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub1 Δ Γ σ')
 
 -- Composite substiutition
 sub1-comp : {Γ₁ Γ₂ Γ₃ : ctx}
-            {σ' : Pred.sub (fst Γ₁) (fst Γ₂)}
-            {τ' : Pred.sub (fst Γ₂) (fst Γ₃)} →
+            {σ' : Pred.sub (ctx-pred Γ₁) (ctx-pred Γ₂)}
+            {τ' : Pred.sub (ctx-pred Γ₂) (ctx-pred Γ₃)} →
             sub1 Γ₁ Γ₂ σ' → sub1 Γ₂ Γ₃ τ' → sub1 Γ₁ Γ₃ (Pred.sub-comp σ' τ')
 sub1-comp {Γ₃ = Γ₃' , []} σ tt = tt
 sub1-comp {Γ₁ = Γ₁} {Γ₃ = Γ₃' , (A , B) ∷ Γ₃} {σ'} {τ'} σ (a , τ) = subst₂ (1cell Γ₁) (Pred.sub-comp-ap σ' τ' A) (Pred.sub-comp-ap σ' τ' B) (sub1-ap σ a) , (sub1-comp σ τ)
 
 sub : ctx → ctx → Type
-sub Δ Γ = Σ (Pred.sub (fst Δ) (fst Γ)) (sub1 Δ Γ)
+sub Δ Γ = Σ (Pred.sub (ctx-pred Δ) (ctx-pred Γ)) (sub1 Δ Γ)
+
+sub-pred : {Δ Γ : ctx} → sub Δ Γ → Pred.sub (ctx-pred Δ) (ctx-pred Γ)
+sub-pred = fst
 
 -- Apply a substitution
 sub-ap : {Δ Γ : ctx} (σ : sub Δ Γ) {A B : obj Γ} → 1cell Γ A B → 1cell Δ (Pred.sub-ap (fst σ) A) (Pred.sub-ap (fst σ) B)
