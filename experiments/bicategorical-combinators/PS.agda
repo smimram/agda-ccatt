@@ -39,6 +39,9 @@ data PStgtCon {n} Γ x where
   tgt-drop : {Δ : Con n} {A B : Ty n} → PStgtCon Γ x Δ → noTgt x B → PStgtCon Γ x (Δ ▹ (A , B))
 
 -- A pasting scheme for an arrow: an arrow (A , B) is pasted as the type A ↝ B
+-- NOTE: we could directly give the rules for (A , B) but the resulting notion
+--       is expected to be more cluttered since we could then look for producers
+--       either in Γ *or in A*
 PSArr : {n : ℕ} (Γ : Con n) (A : Arr n) → Type
 PSArr Γ (A , B) = PS Γ (A ↝ B)
 
