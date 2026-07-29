@@ -95,7 +95,7 @@ sub1-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero , sub1-mk {Γ = Γ' , Γ} σ' (f �
 -- the expected ones
 sub1-lookup-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
                  (f : (i : vars Γ) → term Δ (Pred.sub-ap σ' (lookup (snd Γ) i .fst) , Pred.sub-ap σ' (lookup (snd Γ) i .snd)))
-                 (i : vars Γ) → sub1-lookup (sub1-mk σ' f) i ≡ f i
+                 (i : vars Γ) → sub1-lookup {Γ = Γ} (sub1-mk σ' f) i ≡ f i
 sub1-lookup-mk {Γ = Γ' , A ∷ Γ} σ' f zero = refl
 sub1-lookup-mk {Γ = Γ' , A ∷ Γ} σ' f (suc i) = sub1-lookup-mk {Γ = Γ' , Γ} σ' (f ∘ suc) i
 
@@ -320,15 +320,43 @@ sub-comp-assoc σ τ θ = Σ-≡ (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)
 
 sub1-comp-assoc (Γ₄' , []) σ τ θ = refl
 sub1-comp-assoc {Γ₁ = Γ₁} (Γ₄' , X ∷ Γ₄) σ τ θ =
-  trans
-    (subst-× (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)) _ _)
-    (cong₂ _,_
-      (trans (subst-∘ (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)))
-             (term'-≡ _ (trans (subst₂-term' _ _ _)
-                               (trans (sym (sub-comp-ap' σ τ (_ , fst (snd θ))))
-                                      (trans (cong (sub-ap' σ) (sym (subst₂-term' _ _ _)))
-                                             (sym (subst₂-term' _ _ _)))))))
-      (sub1-comp-assoc (Γ₄' , Γ₄) σ τ (fst θ , snd (snd θ))))
+  begin
+    subst (sub1 Γ₁ (Γ₄' , X ∷ Γ₄)) p (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ))
+  ≡⟨ subst-× p _ _ ⟩
+    _
+  ≡⟨ cong₂ _,_ first (sub1-comp-assoc (Γ₄' , Γ₄) σ τ (fst θ , snd (snd θ))) ⟩
+    sub1-comp (snd σ) (sub1-comp (snd τ) (snd θ))
+  ∎
+  where
+  -- the associativity of the underlying 0-substitutions
+  p = Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)
+  -- the 1-cell the substitutions are applied to
+  a = fst (snd θ)
+  -- the two ways of transporting a agree, as terms with their types
+  img : _≡_ {A = term' Γ₁}
+            (_ , fst (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ)))
+            (_ , fst (sub1-comp (snd σ) (sub1-comp (snd τ) (snd θ))))
+  img =
+    begin
+      (_ , fst (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ)))
+    ≡⟨ subst₂-term' _ _ _ ⟩
+      sub-ap' (sub-comp σ τ) (_ , a)
+    ≡⟨ sym (sub-comp-ap' σ τ (_ , a)) ⟩
+      sub-ap' σ (sub-ap' τ (_ , a))
+    ≡⟨ cong (sub-ap' σ) (sym (subst₂-term' _ _ _)) ⟩
+      sub-ap' σ (_ , fst (sub1-comp (snd τ) (snd θ)))
+    ≡⟨ sym (subst₂-term' _ _ _) ⟩
+      (_ , fst (sub1-comp (snd σ) (sub1-comp (snd τ) (snd θ))))
+    ∎
+  -- the first component: the image of the last 1-variable
+  first =
+    begin
+      subst _ p (fst (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ)))
+    ≡⟨ subst-∘ p ⟩
+      subst (term Γ₁) _ (fst (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ)))
+    ≡⟨ term'-≡ _ img ⟩
+      fst (sub1-comp (snd σ) (sub1-comp (snd τ) (snd θ)))
+    ∎
 
 -- Applying the identity substitution does not change a term
 sub-id-ap' : (Γ : ctx) (a : term' Γ) → sub-ap' (sub-id Γ) a ≡ a
@@ -349,12 +377,37 @@ sub-comp-id σ = Σ-≡ (Pred.sub-comp-id (fst σ)) (sub1-comp-id _ σ)
 
 sub1-comp-id (Γ' , []) σ = refl
 sub1-comp-id {Δ} (Γ' , X ∷ Γ) σ =
-  trans
-    (subst-× (Pred.sub-comp-id (fst σ)) _ _)
-    (cong₂ _,_
-      (trans (subst-∘ (Pred.sub-comp-id (fst σ)))
-             (term'-≡ _ (trans (subst₂-term' _ _ _) (sub-id-ap' Δ (_ , fst (snd σ))))))
-      (sub1-comp-id (Γ' , Γ) (fst σ , snd (snd σ))))
+  begin
+    subst (sub1 Δ (Γ' , X ∷ Γ)) p (sub1-comp (sub1-id Δ) (snd σ))
+  ≡⟨ subst-× p _ _ ⟩
+    _
+  ≡⟨ cong₂ _,_ first (sub1-comp-id (Γ' , Γ) (fst σ , snd (snd σ))) ⟩
+    snd σ
+  ∎
+  where
+  -- the unitality of the underlying 0-substitutions
+  p = Pred.sub-comp-id (fst σ)
+  -- the 1-cell the substitution is applied to
+  a = fst (snd σ)
+  -- the identity does not change a, as a term with its type
+  img : _≡_ {A = term' Δ} (_ , fst (sub1-comp (sub1-id Δ) (snd σ))) (_ , a)
+  img =
+    begin
+      (_ , fst (sub1-comp (sub1-id Δ) (snd σ)))
+    ≡⟨ subst₂-term' _ _ _ ⟩
+      sub-ap' (sub-id Δ) (_ , a)
+    ≡⟨ sub-id-ap' Δ (_ , a) ⟩
+      (_ , a)
+    ∎
+  -- the first component: the image of the last 1-variable
+  first =
+    begin
+      subst _ p (fst (sub1-comp (sub1-id Δ) (snd σ)))
+    ≡⟨ subst-∘ p ⟩
+      subst (term Δ) _ (fst (sub1-comp (sub1-id Δ) (snd σ)))
+    ≡⟨ term'-≡ _ img ⟩
+      a
+    ∎
 
 --- The above, in transported form
 
