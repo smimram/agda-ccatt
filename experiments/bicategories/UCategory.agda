@@ -97,6 +97,64 @@ sub Δ Γ = Σ (Pred.sub (fst Δ) (fst Γ)) (sub2 Δ Γ)
 sub-pred : {Δ Γ : ctx} → sub Δ Γ → Pred.sub (ctx-pred Δ) (ctx-pred Γ)
 sub-pred = fst
 
+-- Apply a substitution to a type: this is the type of the image of a term of
+-- the given type
+sub-ap-type : {Δ Γ : Pred.ctx} (σ : Pred.sub Δ Γ) → type Γ → type Δ
+sub-ap-type σ A = Pred.sub-ap-type σ (type-pred A) , Pred.sub-ap σ (type-src A) , Pred.sub-ap σ (type-tgt A)
+
+-- The identity substitution does not change types
+sub-id-type : (Γ : Pred.ctx) (A : type Γ) → sub-ap-type (Pred.sub-id Γ) A ≡ A
+sub-id-type Γ A =
+  Σ-≡ (Pred.sub-id-type Γ (type-pred A))
+      (trans (subst-× (Pred.sub-id-type Γ (type-pred A)) _ _)
+             (cong₂ _,_ (Pred.sub-id-ap Γ (type-src A)) (Pred.sub-id-ap Γ (type-tgt A))))
+
+-- Composition of substitutions acts on types by composing the actions
+sub-comp-type : {Γ₁ Γ₂ Γ₃ : Pred.ctx} (σ : Pred.sub Γ₁ Γ₂) (τ : Pred.sub Γ₂ Γ₃) (A : type Γ₃)
+              → sub-ap-type σ (sub-ap-type τ A) ≡ sub-ap-type (Pred.sub-comp σ τ) A
+sub-comp-type σ τ A =
+  Σ-≡ (Pred.sub-comp-type σ τ (type-pred A))
+      (trans (subst-× (Pred.sub-comp-type σ τ (type-pred A)) _ _)
+             (cong₂ _,_ (Pred.sub-comp-ap σ τ (type-src A)) (Pred.sub-comp-ap σ τ (type-tgt A))))
+
+-- Image of a 2-variable under a substitution
+sub2-lookup : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub2 Δ Γ σ') (i : vars Γ)
+            → term Δ (sub-ap-type σ' (lookup (snd Γ) i))
+sub2-lookup {Γ = Γ' , A ∷ Γ} σ zero = fst σ
+sub2-lookup {Γ = Γ' , A ∷ Γ} σ (suc i) = sub2-lookup {Γ = Γ' , Γ} (snd σ) i
+
+-- A substitution is determined by the images of the 2-variables
+sub2-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
+          (f : (i : vars Γ) → term Δ (sub-ap-type σ' (lookup (snd Γ) i)))
+        → sub2 Δ Γ σ'
+sub2-mk {Γ = Γ' , []} σ' f = tt
+sub2-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero , sub2-mk {Γ = Γ' , Γ} σ' (f ∘ suc)
+
+-- Apply a substitution (defined below, since it requires the terms)
+sub2-ap : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub2 Δ Γ σ') {A : type (fst Γ)}
+        → term Γ A → term Δ (sub-ap-type σ' A)
+
+sub-ap : {Δ Γ : ctx} (σ : sub Δ Γ) {A : type (ctx-pred Γ)} → term Γ A → term Δ (sub-ap-type (fst σ) A)
+sub-ap σ = sub2-ap (snd σ)
+
+-- Identity substitution (defined below, since it requires the terms)
+sub2-id : (Γ : ctx) → sub2 Γ Γ (Pred.sub-id (ctx-pred Γ))
+
+-- Identity substitution
+sub-id : (Γ : ctx) → sub Γ Γ
+sub-id Γ = Pred.sub-id (ctx-pred Γ) , sub2-id Γ
+
+-- Composition of substitutions
+sub2-comp : {Γ'' Γ' Γ : ctx} {τ' : Pred.sub (ctx-pred Γ'') (ctx-pred Γ')} {σ' : Pred.sub (ctx-pred Γ') (ctx-pred Γ)}
+          → sub2 Γ'' Γ' τ' → sub2 Γ' Γ σ' → sub2 Γ'' Γ (Pred.sub-comp τ' σ')
+sub2-comp {Γ = Γ0 , []} τ σ = tt
+sub2-comp {Γ'' = Γ''} {Γ = Γ0 , A ∷ Γ} {τ'} {σ'} τ (α , σ) =
+  subst (term Γ'') (sub-comp-type τ' σ' A) (sub2-ap τ α) , sub2-comp {Γ = Γ0 , Γ} τ σ
+
+-- Composition of substitutions
+sub-comp : {Γ'' Γ' Γ : ctx} (τ : sub Γ'' Γ') (σ : sub Γ' Γ) → sub Γ'' Γ
+sub-comp τ σ = Pred.sub-comp (fst τ) (fst σ) , sub2-comp (snd τ) (snd σ)
+
 -- Shape of a pasting scheme
 pshape : Type
 pshape = List Pred.pshape
@@ -304,6 +362,18 @@ ps-tgt1 S = snd (ps-tgt' S)
 ps-tgt : (S : pshape) → sub (ps S) (ctx-inc (Pred.ps (pshape-tgt S)))
 ps-tgt S = (ps-tgt0 S , ps-tgt1 S) , tt
 
+ps-src-ret : (S : pshape) → sub (ctx-inc (Pred.ps (pshape-src S))) (ps S)
+ps-src-ret = {!!}
+
+-- ps-src-retraction : (S : pshape-src) → sub-comp ? ? ≡ ?
+
+
+
+
+
+
+
+
 -- TEST: variant of the definition of ps where we explicitly handle natural numbers instead of being inductive
 -- EX: [3,2] has
 -- - 0-cells: 2 1 0
@@ -363,6 +433,18 @@ data term where
   coh : {Γ : ctx} (S : pshape) (σ : sub Γ (ps S)) (t : 1cell (ps S) {!ps-src (ps S)!} {!!}) (u : 1cell (ps S) {!!} {!!}) → 2cell Γ {!!} {!!}
 
 last2 Γ A = var zero
+
+-- The identity substitution sends a variable to itself
+sub2-id Γ = sub2-mk (Pred.sub-id (ctx-pred Γ)) λ v →
+  subst (term Γ) (sym (sub-id-type (ctx-pred Γ) (lookup (snd Γ) v))) (var v)
+
+-- NOTE: we cannot case on the term here (not even to handle the variable case):
+-- splitting is stuck as long as the type of the coh constructor above contains
+-- metavariables. Once it is filled in, this should be
+--   sub2-ap σ (var v)       = sub2-lookup σ v
+--   sub2-ap σ (coh S τ t u) = ... coh S (sub-comp (_ , σ) τ) t u ...
+-- (as in Pred.sub1-ap). This is the only ingredient of sub-comp still missing.
+sub2-ap σ t = {!!}
 
 -- lunit : {Γ : ctx} {A B : obj Γ} (a : 1cell Γ A B) → 2cell Γ (Pred.co Pred.id a) a
 -- lunit {Γ} {A} {B} a = coh (0 ∷ []) (A , B , a , tt , tt) (Pred.co Pred.id a) a

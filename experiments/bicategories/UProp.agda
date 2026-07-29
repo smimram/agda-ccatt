@@ -62,3 +62,14 @@ sub-id (suc Γ) = last0 Γ ∷ wk0
 sub-id-ap : (Γ : ctx) (x : term Γ) → sub-ap (sub-id Γ) x ≡ x
 sub-id-ap (suc Γ) zero = refl
 sub-id-ap (suc Γ) (suc x) = wk0-ap x
+
+-- Composition of substitutions is associative
+sub-comp-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : ctx} (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (θ : sub Γ₃ Γ₄)
+               → sub-comp (sub-comp σ τ) θ ≡ sub-comp σ (sub-comp τ θ)
+sub-comp-assoc σ τ [] = refl
+sub-comp-assoc σ τ (x ∷ θ) = cong₂ _∷_ (sym (sub-comp-ap σ τ x)) (sub-comp-assoc σ τ θ)
+
+-- The identity substitution is a left unit for composition
+sub-comp-id : {Δ Γ : ctx} (σ : sub Δ Γ) → sub-comp (sub-id Δ) σ ≡ σ
+sub-comp-id [] = refl
+sub-comp-id {Δ} (x ∷ σ) = cong₂ _∷_ (sub-id-ap Δ x) (sub-comp-id σ)

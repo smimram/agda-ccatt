@@ -91,6 +91,14 @@ sub1-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
 sub1-mk {Γ = Γ' , []} σ' f = tt
 sub1-mk {Γ = Γ' , A ∷ Γ} σ' f = f zero , sub1-mk {Γ = Γ' , Γ} σ' (f ∘ suc)
 
+-- The variables of a substitution built from the images of the variables are
+-- the expected ones
+sub1-lookup-mk : {Δ Γ : ctx} (σ' : Pred.sub (fst Δ) (fst Γ))
+                 (f : (i : vars Γ) → term Δ (Pred.sub-ap σ' (lookup (snd Γ) i .fst) , Pred.sub-ap σ' (lookup (snd Γ) i .snd)))
+                 (i : vars Γ) → sub1-lookup (sub1-mk σ' f) i ≡ f i
+sub1-lookup-mk {Γ = Γ' , A ∷ Γ} σ' f zero = refl
+sub1-lookup-mk {Γ = Γ' , A ∷ Γ} σ' f (suc i) = sub1-lookup-mk {Γ = Γ' , Γ} σ' (f ∘ suc) i
+
 sub1-ap : {Δ Γ : ctx} {σ' : Pred.sub (fst Δ) (fst Γ)} (σ : sub1 Δ Γ σ') {A B : obj Γ} → 1cell Γ A B → 1cell Δ (Pred.sub-ap σ' A) (Pred.sub-ap σ' B)
 
 -- Composite substiutition
@@ -111,24 +119,37 @@ sub-pred = fst
 sub-ap : {Δ Γ : ctx} (σ : sub Δ Γ) {A B : obj Γ} → 1cell Γ A B → 1cell Δ (Pred.sub-ap (fst σ) A) (Pred.sub-ap (fst σ) B)
 sub-ap σ a = sub1-ap (σ .snd) a
 
+-- Apply a substitution to a type: this is the type of the image of a term of
+-- the given type
+sub-ap-type : {Δ Γ : ctx} (σ : sub Δ Γ) → type (ctx-pred Γ) → type (ctx-pred Δ)
+sub-ap-type σ X = Pred.sub-ap (fst σ) (fst X) , Pred.sub-ap (fst σ) (snd X)
+
 -- Compose substitutions
 sub-comp : {Γ'' Γ' Γ : ctx} (τ : sub Γ'' Γ') (σ : sub Γ' Γ) → sub Γ'' Γ
 sub-comp τ σ = Pred.sub-comp (fst τ) (fst σ) , sub1-comp (τ .snd) (σ .snd)
 
+-- Identity substitution (defined below, since it requires the terms)
 sub1-id : (Γ : ctx) → sub1 Γ Γ (Pred.sub-id (ctx-pred Γ))
-sub1-id (Γ , []) = tt
-sub1-id (Γ , A ∷ Δ) = {!!} , {!!}
 
 -- Identity substitution
 sub-id : (Γ : ctx) → sub Γ Γ
 sub-id Γ = (Pred.sub-id (ctx-pred Γ)) , sub1-id Γ
 
+-- The identity substitution does not change types
+sub-id-type : (Γ : ctx) (X : type (ctx-pred Γ)) → sub-ap-type (sub-id Γ) X ≡ X
+sub-id-type Γ X = cong₂ _,_ (Pred.sub-id-ap (ctx-pred Γ) (fst X)) (Pred.sub-id-ap (ctx-pred Γ) (snd X))
+
+-- Composition of substitutions acts on types by composing the actions
+sub-comp-type : {Γ₁ Γ₂ Γ₃ : ctx} (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (X : type (ctx-pred Γ₃))
+              → sub-ap-type σ (sub-ap-type τ X) ≡ sub-ap-type (sub-comp σ τ) X
+sub-comp-type σ τ X =
+  cong₂ _,_ (Pred.sub-comp-ap (fst σ) (fst τ) (fst X)) (Pred.sub-comp-ap (fst σ) (fst τ) (snd X))
+
 -- Inclusion of prop substitutions
 sub-inc : {Γ' Γ : Pred.ctx} (σ : Pred.sub Γ' Γ) → sub (ctx-inc Γ') (ctx-inc Γ)
 sub-inc σ = σ , tt
 
--- Extending a substitution by a 0-cell does not change the image of the other
--- 0-variables
+-- Extending a substitution by a 0-cell does not change the image of the other 0-variables
 sub-ap-add0 : {Δ Γ : Pred.ctx} (σ' : Pred.sub Δ Γ) (z : Pred.term Δ) (x : Pred.term Γ)
             → Pred.sub-ap (z ∷ σ') (Pred.wk0ap x) ≡ Pred.sub-ap σ' x
 sub-ap-add0 σ' z x = cong (Pred.sub-ap (z ∷ σ')) (Pred.wk0-ap x)
@@ -211,6 +232,13 @@ wk0-1 Γ = sub1-mk Pred.wk0 λ v →
   let (v' , e) = map-lookup (wk0-type {fst Γ}) (snd Γ) v in
   subst (term (add0 Γ)) e (var v')
 
+-- The identity substitution sends a variable to itself
+sub1-id Γ = sub1-mk (Pred.sub-id (ctx-pred Γ)) λ v →
+  subst₂ (λ x y → term Γ (x , y))
+         (sym (Pred.sub-id-ap (ctx-pred Γ) (lookup (snd Γ) v .fst)))
+         (sym (Pred.sub-id-ap (ctx-pred Γ) (lookup (snd Γ) v .snd)))
+         (var v)
+
 wk1 Γ A = sub1-mk (Pred.sub-id (fst Γ)) λ v →
   subst₂ (λ x y → term (add1 Γ A) (x , y))
          (sym (Pred.sub-id-ap (fst Γ) (lookup (snd Γ) v .fst)))
@@ -227,3 +255,115 @@ id {A = A} = coh 0 (A ∷ [] , tt)
 -- Composition of 1-cells
 co : {Γ : ctx} {A B C : obj Γ} (a : 1cell Γ A B) (b : 1cell Γ B C) → 1cell Γ A C
 co {Γ} {A} {B} {C} a b = coh 2 (C ∷ B ∷ A ∷ [] , b , a , tt)
+
+--- Functoriality of substitution
+
+-- A term together with its type: stating equalities between terms of a priori
+-- different types is much more convenient there than transporting all the time
+term' : ctx → Type
+term' Γ = Σ (type (ctx-pred Γ)) (term Γ)
+
+-- Two terms of a priori different types are equal when one transports to the
+-- other (any proof of the equality of the types will do since we have K)
+term'-≡ : {Γ : ctx} {X Y : type (ctx-pred Γ)} {a : term Γ X} {b : term Γ Y} (p : X ≡ Y)
+        → _≡_ {A = term' Γ} (X , a) (Y , b) → subst (term Γ) p a ≡ b
+term'-≡ {Γ} {a = a} p refl = cong (λ q → subst (term Γ) q a) (uip p refl)
+
+-- Transporting a term does not change it
+subst₂-term' : {Γ : ctx} {A A' B B' : obj Γ} (p : A ≡ A') (q : B ≡ B') (a : 1cell Γ A B)
+             → _≡_ {A = term' Γ} ((A' , B') , subst₂ (1cell Γ) p q a) ((A , B) , a)
+subst₂-term' refl refl a = refl
+
+-- Applying a substitution to a term with its type
+sub-ap' : {Δ Γ : ctx} (σ : sub Δ Γ) → term' Γ → term' Δ
+sub-ap' σ (X , a) = sub-ap-type σ X , sub-ap σ a
+
+-- The image of a coherence is the coherence over the composed substitution
+sub-ap-coh' : {Δ Γ : ctx} (σ : sub Δ Γ) (S : pshape) (θ : sub Γ (ps S))
+            → sub-ap' σ (sub-ap-type θ (ps-hom S) , coh S θ) ≡ (sub-ap-type (sub-comp σ θ) (ps-hom S) , coh S (sub-comp σ θ))
+sub-ap-coh' σ S θ = subst₂-term' _ _ _
+
+-- The image of a variable under a composite substitution
+sub1-lookup-comp' : {Γ₁ Γ₂ : ctx} (Γ₃ : ctx) (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (v : vars Γ₃)
+                  → sub-ap' σ (_ , sub1-lookup (snd τ) v) ≡ (_ , sub1-lookup (sub1-comp (snd σ) (snd τ)) v)
+sub1-lookup-comp' (Γ₃' , X ∷ Γ₃) σ τ zero = sym (subst₂-term' _ _ _)
+sub1-lookup-comp' (Γ₃' , X ∷ Γ₃) σ τ (suc v) = sub1-lookup-comp' (Γ₃' , Γ₃) σ (fst τ , snd (snd τ)) v
+
+-- Applying a composite substitution amounts to applying the substitutions in turn
+sub-comp-ap' : {Γ₁ Γ₂ Γ₃ : ctx} (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (a : term' Γ₃)
+             → sub-ap' σ (sub-ap' τ a) ≡ sub-ap' (sub-comp σ τ) a
+
+-- Composition of substitutions is associative
+sub-comp-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : ctx} (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (θ : sub Γ₃ Γ₄)
+               → sub-comp (sub-comp σ τ) θ ≡ sub-comp σ (sub-comp τ θ)
+
+sub1-comp-assoc : {Γ₁ Γ₂ Γ₃ : ctx} (Γ₄ : ctx) (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) (θ : sub Γ₃ Γ₄)
+                → subst (sub1 Γ₁ Γ₄) (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ))
+                        (sub1-comp (sub1-comp (snd σ) (snd τ)) (snd θ))
+                  ≡ sub1-comp (snd σ) (sub1-comp (snd τ) (snd θ))
+
+sub-comp-ap' {Γ₃ = Γ₃} σ τ (X , var v) = sub1-lookup-comp' Γ₃ σ τ v
+sub-comp-ap' σ τ (X , coh S θ) =
+  begin
+    sub-ap' σ (sub-ap' τ (X , coh S θ))
+  ≡⟨ cong (sub-ap' σ) (sub-ap-coh' τ S θ) ⟩
+    sub-ap' σ (_ , coh S (sub-comp τ θ))
+  ≡⟨ sub-ap-coh' σ S (sub-comp τ θ) ⟩
+    (_ , coh S (sub-comp σ (sub-comp τ θ)))
+  ≡⟨ cong (λ ρ → sub-ap-type ρ (ps-hom S) , coh S ρ) (sym (sub-comp-assoc σ τ θ)) ⟩
+    (_ , coh S (sub-comp (sub-comp σ τ) θ))
+  ≡⟨ sym (sub-ap-coh' (sub-comp σ τ) S θ) ⟩
+    sub-ap' (sub-comp σ τ) (X , coh S θ)
+  ∎
+
+sub-comp-assoc σ τ θ = Σ-≡ (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)) (sub1-comp-assoc _ σ τ θ)
+
+sub1-comp-assoc (Γ₄' , []) σ τ θ = refl
+sub1-comp-assoc {Γ₁ = Γ₁} (Γ₄' , X ∷ Γ₄) σ τ θ =
+  trans
+    (subst-× (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)) _ _)
+    (cong₂ _,_
+      (trans (subst-∘ (Pred.sub-comp-assoc (fst σ) (fst τ) (fst θ)))
+             (term'-≡ _ (trans (subst₂-term' _ _ _)
+                               (trans (sym (sub-comp-ap' σ τ (_ , fst (snd θ))))
+                                      (trans (cong (sub-ap' σ) (sym (subst₂-term' _ _ _)))
+                                             (sym (subst₂-term' _ _ _)))))))
+      (sub1-comp-assoc (Γ₄' , Γ₄) σ τ (fst θ , snd (snd θ))))
+
+-- Applying the identity substitution does not change a term
+sub-id-ap' : (Γ : ctx) (a : term' Γ) → sub-ap' (sub-id Γ) a ≡ a
+
+-- The identity substitution is a left unit for composition
+sub-comp-id : {Δ Γ : ctx} (σ : sub Δ Γ) → sub-comp (sub-id Δ) σ ≡ σ
+
+sub1-comp-id : {Δ : ctx} (Γ : ctx) (σ : sub Δ Γ)
+             → subst (sub1 Δ Γ) (Pred.sub-comp-id (fst σ)) (sub1-comp (sub1-id Δ) (snd σ)) ≡ snd σ
+
+sub-id-ap' Γ (X , var v) = trans (cong (λ a → _ , a) (sub1-lookup-mk (Pred.sub-id (ctx-pred Γ)) _ v)) (subst₂-term' _ _ _)
+sub-id-ap' Γ (X , coh S θ) =
+  trans
+    (sub-ap-coh' (sub-id Γ) S θ)
+    (cong (λ ρ → sub-ap-type ρ (ps-hom S) , coh S ρ) (sub-comp-id θ))
+
+sub-comp-id σ = Σ-≡ (Pred.sub-comp-id (fst σ)) (sub1-comp-id _ σ)
+
+sub1-comp-id (Γ' , []) σ = refl
+sub1-comp-id {Δ} (Γ' , X ∷ Γ) σ =
+  trans
+    (subst-× (Pred.sub-comp-id (fst σ)) _ _)
+    (cong₂ _,_
+      (trans (subst-∘ (Pred.sub-comp-id (fst σ)))
+             (term'-≡ _ (trans (subst₂-term' _ _ _) (sub-id-ap' Δ (_ , fst (snd σ))))))
+      (sub1-comp-id (Γ' , Γ) (fst σ , snd (snd σ))))
+
+--- The above, in transported form
+
+-- Applying a composite substitution amounts to applying the substitutions in turn
+sub-comp-ap : {Γ₁ Γ₂ Γ₃ : ctx} (σ : sub Γ₁ Γ₂) (τ : sub Γ₂ Γ₃) {X : type (ctx-pred Γ₃)} (a : term Γ₃ X)
+            → subst (term Γ₁) (sub-comp-type σ τ X) (sub-ap σ (sub-ap τ a)) ≡ sub-ap (sub-comp σ τ) a
+sub-comp-ap σ τ a = term'-≡ _ (sub-comp-ap' σ τ (_ , a))
+
+-- Applying the identity substitution does not change a term
+sub-id-ap : (Γ : ctx) {X : type (ctx-pred Γ)} (a : term Γ X)
+          → subst (term Γ) (sub-id-type Γ X) (sub-ap (sub-id Γ) a) ≡ a
+sub-id-ap Γ a = term'-≡ _ (sub-id-ap' Γ (_ , a))
