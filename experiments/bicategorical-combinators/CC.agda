@@ -65,7 +65,31 @@ data _∼_ {n : ℕ} {Γ : Con n} : {A B : Ty n} {t u : Tm Γ (A , B)} (α β : 
   eta-eps : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → co2 (whiskr (pa2 (whiskl fst (eta f)) id2) app) (eps (pa (fst · f) snd · app)) ∼ id2
   eta-nat : {A B C : Ty n} {f g : Tm Γ (A × B , C)} (α : f ⇒ g) → co2 (eps f) α ∼ co2 (whiskr (pa2 (whiskl fst (abs2 α)) id2) app) (eps g)
   eps-nat : {A B C : Ty n} {f g : Tm Γ (A , B ↝ C)} (α : f ⇒ g) → co2 (eta f) (abs2 (whiskr (pa2 (whiskl fst α) id2) app)) ∼ co2 α (eta g)
+
   -- (bi)category
+  unitl2 : {A : Arr n} {f g : Tm Γ A} (α : f ⇒ g) → co2 id2 α ∼ α
+  unitr2 : {A : Arr n} {f g : Tm Γ A} (α : f ⇒ g) → co2 α id2 ∼ α
+  assoc2 : {A : Arr n} {f g h i : Tm Γ A} (α : f ⇒ g) (β : g ⇒ h) (γ : h ⇒ i) → co2 (co2 α β) γ ∼ co2 α (co2 β γ)
+  whiskl-id2 : {A B C : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) → whiskl f (id2 {f = g}) ∼ id2
+  whiskl-co2 : {A B C : Ty n} (f : Tm Γ (A , B)) {g g' g'' : Tm Γ (B , C)} (α : g ⇒ g') (β : g' ⇒ g'') → whiskl f (co2 α β) ∼ co2 (whiskl f α) (whiskl f β)
+  whiskr-id2 : {A B C : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) → whiskr (id2 {f = f}) g ∼ id2
+  whiskr-co2 : {A B C : Ty n} {f f' f'' : Tm Γ (A , B)} (α : f ⇒ f') (β : f' ⇒ f'') (g : Tm Γ (B , C)) → whiskr (co2 α β) g ∼ co2 (whiskr α g) (whiskr β g)
+  co2-unitl : {A B : Ty n} {f g : Tm Γ (A , B)} (α : f ⇒ g) → co2 (whiskl id α) (unitl g) ∼ co2 (unitl f) α
+  co2-unitr : {A B : Ty n} {f g : Tm Γ (A , B)} (α : f ⇒ g) → co2 (whiskr α id) (unitr g) ∼ co2 (unitr f) α
+  whiskl-assoc : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) {h h' : Tm Γ (C , D)} (α : h ⇒ h') → co2 (assoc f g h) (whiskl f (whiskl g α)) ∼ co2 (whiskl (f · g) α) (assoc f g h')
+  whisk-assoc : {A B C D : Ty n} (f : Tm Γ (A , B)) {g g' : Tm Γ (B , C)} (α : g ⇒ g') (h : Tm Γ (C , D)) → co2 (whiskr (whiskl f α) h) (assoc f g' h) ∼ co2 (assoc f g h) (whiskl f (whiskr α h))
+  whiskr-assoc : {A B C D : Ty n} {f f' : Tm Γ (A , B)} (α : f ⇒ f') (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → co2 (whiskr (whiskr α g) h) (assoc f' g h) ∼ co2 (assoc f g h) (whiskr α (g · h))
+  xch : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (B , C)} (α : f ⇒ f') (β : g ⇒ g') → co2 (whiskr α g) (whiskl f' β) ∼ co2 (whiskl f β) (whiskr α g')
+  unitl-invr : {A B : Ty n} (f : Tm Γ (A , B)) → co2 (unitl f) (unitl' f) ∼ id2
+  unitl-invl : {A B : Ty n} (f : Tm Γ (A , B)) → co2 (unitl' f) (unitl f) ∼ id2
+  unitr-invr : {A B : Ty n} (f : Tm Γ (A , B)) → co2 (unitr f) (unitr' f) ∼ id2
+  unitr-invl : {A B : Ty n} (f : Tm Γ (A , B)) → co2 (unitr' f) (unitr f) ∼ id2
+  assoc-invl : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → co2 (assoc f g h) (assoc' f g h) ∼ id2
+  assoc-invr : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → co2 (assoc' f g h) (assoc f g h) ∼ id2
+  invl-invr : {A B C : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) → co2 (assoc f id g) (whiskl f (unitl g)) ∼ whiskr (unitr f) g
+  pentagon : {A B C D E : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) (i : Tm Γ (D , E)) → co2 (assoc (f · g) h i) (assoc f g (h · i)) ∼ co2 (whiskr (assoc f g h) i) (co2 (assoc f (g · h) i) (whiskl f (assoc g h i)))
+
+  -- congruence
   ∼refl : {A : Arr n} {f g : Tm Γ A} (α : f ⇒ g) → α ∼ α
   ∼sym : {A : Arr n} {f g : Tm Γ A} {α β : f ⇒ g} → α ∼ β → β ∼ α
   ∼trans : {A : Arr n} {f g : Tm Γ A} {α β γ : f ⇒ g} → α ∼ β → β ∼ γ → α ∼ γ
