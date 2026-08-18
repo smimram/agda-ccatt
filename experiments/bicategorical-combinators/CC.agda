@@ -6,7 +6,7 @@ open import Ty
 open import PS
 -- open import CCBase public
 
-infixl 6 _·_
+infixr 6 _·_
 
 data Tm {n : ℕ} (Γ : Con n) : Arr n → Type where
   var  : {A : Arr n} → A ∈ Γ → Tm Γ A
@@ -19,37 +19,73 @@ data Tm {n : ℕ} (Γ : Con n) : Arr n → Type where
   abs  : {A B C : Ty n} → Tm Γ (A × B , C) → Tm Γ (A , B ↝ C)
   app  : {A B : Ty n} → Tm Γ ((A ↝ B) × A , B)
 
-infix 5 _⇒_
+infixr 5 _⇒_
 
 data _⇒_ {n : ℕ} {Γ : Con n} : {A : Arr n} → Tm Γ A → Tm Γ A → Type where
+  --- products
   pa-fst : {X A B : Ty n} (f : Tm Γ (X , A)) (g : Tm Γ (X , B)) → pa f g · fst ⇒ f
   pa-snd : {X A B : Ty n} (f : Tm Γ (X , A)) (g : Tm Γ (X , B)) → pa f g · snd ⇒ g
   pa-eta : {A B C : Ty n} (f : Tm Γ (A , B × C)) → f ⇒ pa (f · fst) (f · snd)
-  pa2 : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} (α : f ⇒ f') (β : g ⇒ g') → pa f g ⇒ pa f' g'
+  pa-fst' : {X A B : Ty n} (f : Tm Γ (X , A)) (g : Tm Γ (X , B)) → f ⇒ pa f g · fst
+  pa-snd' : {X A B : Ty n} (f : Tm Γ (X , A)) (g : Tm Γ (X , B)) → g ⇒ pa f g · snd
+  pa-eta' : {A B C : Ty n} (f : Tm Γ (A , B × C)) → pa (f · fst) (f · snd) ⇒ f
+  ⇒pa : {X A B : Ty n} {f f' : Tm Γ (X , A)} {g g' : Tm Γ (X , B)} → f ⇒ f' → g ⇒ g' → pa f g ⇒ pa f' g'
+  --- terminal
   term-can : {A : Ty n} (f : Tm Γ (A , 𝟙)) → f ⇒ term
+  term-can' : {A : Ty n} (f : Tm Γ (A , 𝟙)) → term ⇒ f
+  --- closure
   eps : {A B C : Ty n} (f : Tm Γ (A × B , C)) → pa (fst · abs f) snd · app ⇒ f
   eta : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → f ⇒ abs (pa (fst · f) snd · app)
+  eps' : {A B C : Ty n} (f : Tm Γ (A × B , C)) → f ⇒ pa (fst · abs f) snd · app
+  eta' : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → abs (pa (fst · f) snd · app) ⇒ f
+  ⇒abs : {A B C : Ty n} {f f' : Tm Γ (A × B , C)} → f ⇒ f' → abs f ⇒ abs f'
+  --- category
   unitl : {A B : Ty n} (f : Tm Γ (A , B)) → id · f ⇒ f
   unitr : {A B : Ty n} (f : Tm Γ (A , B)) → f · id ⇒ f
   assoc : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → (f · g) · h ⇒ f · (g · h)
-  ⇒· : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (B , C)} → f ⇒ f' → g ⇒ g' → f · g ⇒ f' · g'
-  ⇒pa : {X A B : Ty n} {f f' : Tm Γ (X , A)} {g g' : Tm Γ (X , B)} → f ⇒ f' → g ⇒ g' → pa f g ⇒ pa f' g'
-  ⇒abs : {A B C : Ty n} {f f' : Tm Γ (A × B , C)} → f ⇒ f' → abs f ⇒ abs f'
+  unitl' : {A B : Ty n} (f : Tm Γ (A , B)) → f ⇒ id · f
+  unitr' : {A B : Ty n} (f : Tm Γ (A , B)) → f ⇒ f · id
+  assoc' : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → f · (g · h) ⇒ (f · g) · h
   ⇒refl : {A : Arr n} {f : Tm Γ A} → f ⇒ f
-  ⇒sym  : {A : Arr n} {f g : Tm Γ A} → f ⇒ g → g ⇒ f
   ⇒trans : {A : Arr n} {f g h : Tm Γ A} → f ⇒ g → g ⇒ h → f ⇒ h
   ⇒whiskl : {A B C : Ty n} (f : Tm Γ (A , B)) {g g' : Tm Γ (B , C)} (α : g ⇒ g') → f · g ⇒ f · g'
   ⇒whiskr : {A B C : Ty n} {f f' : Tm Γ (A , B)} (α : f ⇒ f') (g : Tm Γ (B , C)) → f · g ⇒ f' · g
 
 term2 : {n : ℕ} {Γ : Con n} {A : Ty n} (f g : Tm Γ (A , 𝟙)) → f ⇒ g
-term2 f g = ⇒trans (term-can f) (⇒sym (term-can g))
+term2 f g = ⇒trans (term-can f) (term-can' g)
 
 data _∼_ {n : ℕ} {Γ : Con n} : {A B : Ty n} {t u : Tm Γ (A , B)} (α β : t ⇒ u) → Type where
-  pa2-eta : {A B C : Ty n} {f g : Tm Γ (A , B × C)} (α : f ⇒ g) → ⇒trans α (pa-eta g) ∼ ⇒trans (pa-eta f) (pa2 (⇒whiskr α fst) (⇒whiskr α snd))
+  -- finite prodcuts
   term-can2 : {A : Ty n} {f g : Tm Γ (A , 𝟙)} (α : f ⇒ g) → α ∼ term2 f g
-  ∼refl : {A : Arr n} {t u : Tm Γ A} (α : t ⇒ u) → α ∼ α
-  -- ∼sym : {A : Arr n} {t u : Tm Γ A} → t ∼ u → u ∼ t
-  -- ∼trans : {A : Arr n} {t u v : Tm Γ A} → t ∼ u → u ∼ v → t ∼ v
+  ⇒pa-eta : {A B C : Ty n} {f g : Tm Γ (A , B × C)} (α : f ⇒ g) → ⇒trans α (pa-eta g) ∼ ⇒trans (pa-eta f) (⇒pa (⇒whiskr α fst) (⇒whiskr α snd))
+  ⇒pa-fst : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} (α : f ⇒ f') (β : g ⇒ g') → ⇒trans (⇒whiskr (⇒pa α β) fst) (pa-fst f' g') ∼ (⇒trans (pa-fst f g) α)
+  ⇒pa-snd : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} (α : f ⇒ f') (β : g ⇒ g') → ⇒trans (⇒whiskr (⇒pa α β) snd) (pa-snd f' g') ∼ (⇒trans (pa-snd f g) β)
+  ∼pa : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} {α α' : f ⇒ f'} {β β' : g ⇒ g'} → α ∼ α' → β ∼ β' → ⇒pa α β ∼ ⇒pa α' β'
+  -- closure
+  eta-eps : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → ⇒trans (⇒whiskr (⇒pa (⇒whiskl fst (eta f)) ⇒refl) app) (eps (pa (fst · f) snd · app)) ∼ ⇒refl
+  -- coh eta-nat {a b c : .} {f g : a × b → c} (α : f → g) : co2 (eps f) α = co2 (co21 (F2 b (abs2 α)) app) (eps g)
+  -- coh eps-nat {a b c : .} {f g : a → b ⇒ c} (α : f → g) : co2 (eta f) (abs2 (co21 (F2 b α) app)) = co2 α (eta g)
+  ∼refl : {A : Arr n} {f g : Tm Γ A} (α : f ⇒ g) → α ∼ α
+  ∼sym : {A : Arr n} {f g : Tm Γ A} {α β : f ⇒ g} → α ∼ β → β ∼ α
+  ∼trans : {A : Arr n} {f g : Tm Γ A} {α β γ : f ⇒ g} → α ∼ β → β ∼ γ → α ∼ γ
+
+-- Some derived laws
+module _ {n : ℕ} {Γ : Con n} where
+  infixr 6 _⇒·_
+  _⇒·_ :  {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (B , C)} → f ⇒ f' → g ⇒ g' → f · g ⇒ f' · g'
+  _⇒·_ α β = ⇒trans (⇒whiskr α _) (⇒whiskl _ β)
+
+  ⇒trans3 : {A : Arr n} {f1 f2 f3 f4 : Tm Γ A} → f1 ⇒ f2 → f2 ⇒ f3 → f3 ⇒ f4 → f1 ⇒ f4
+  ⇒trans3 α β γ = ⇒trans α (⇒trans β γ)
+
+  pa2-fst' : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} (α : f ⇒ f') (β : g ⇒ g') → ⇒trans3 (pa-fst' f g) (⇒whiskr (⇒pa α β) fst) (pa-fst f' g') ∼ α
+  pa2-fst' = {!!} -- derived from pa2-fst and inverse laws
+
+  pa2-snd' : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} (α : f ⇒ f') (β : g ⇒ g') → ⇒trans3 (pa-snd' f g) (⇒whiskr (⇒pa α β) snd) (pa-snd f' g') ∼ β
+  pa2-snd' = {!!} -- derived from pa2-snd and inverse laws
+
+  -- coh eta-eps  {a b c : .} (f : a → b ⇒ c) : co21 (F2 b (eta f)) app = eps' (co1 (F1 b f) app)
+  -- eta-eps'
 
 -- Substitutions
 Sub : {n n' : ℕ} (τ : SubTy n n') (Γ : Con n) (Γ' : Con n') → Type
@@ -82,9 +118,9 @@ _⇒Sub_ {Γ' = Γ' ▹ A} (σ , t) (σ' , t') = (σ ⇒Sub σ') ∧ (t ⇒ t')
 ⇒SubRefl {Γ' = ε} σ = tt
 ⇒SubRefl {Γ' = Γ' ▹ A} (σ , t) = ⇒SubRefl σ , ⇒refl
 
-⇒SubSym : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {τ : SubTy n n'} {σ σ' : Sub τ Γ Γ'} → σ ⇒Sub σ' → σ' ⇒Sub σ
-⇒SubSym {Γ' = ε} tt = tt
-⇒SubSym {Γ' = Γ' ▹ A} (p , q) = ⇒SubSym p , ⇒sym q
+-- ⇒SubSym : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {τ : SubTy n n'} {σ σ' : Sub τ Γ Γ'} → σ ⇒Sub σ' → σ' ⇒Sub σ
+-- ⇒SubSym {Γ' = ε} tt = tt
+-- ⇒SubSym {Γ' = Γ' ▹ A} (p , q) = ⇒SubSym p , ⇒sym q
 
 -- Applying equivalent substitutions to a term gives equivalent results
 -- (recursion on the term, so that _[_]⇒ below can recurse on the proof)
@@ -92,7 +128,7 @@ _⇒Sub_ {Γ' = Γ' ▹ A} (σ , t) (σ' , t') = (σ ⇒Sub σ') ∧ (t ⇒ t')
 []⇒ (var here) (σ , p) = p
 []⇒ (var (drop x)) (σ , p) = []⇒ (var x) σ
 []⇒ id p = ⇒refl
-[]⇒ (f · g) p = ⇒· ([]⇒ f p) ([]⇒ g p)
+[]⇒ (f · g) p = _⇒·_ ([]⇒ f p) ([]⇒ g p)
 []⇒ term p = ⇒refl
 []⇒ (pa f g) p = ⇒pa ([]⇒ f p) ([]⇒ g p)
 []⇒ fst p = ⇒refl
@@ -104,18 +140,15 @@ _[_]⇒ : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {A : Arr n'} {t u : Tm Γ' A}
 pa-fst f g [ q ]⇒ = ⇒trans (pa-fst (f [ _ ]) (g [ _ ])) ([]⇒ f q)
 pa-snd f g [ q ]⇒ = ⇒trans (pa-snd (f [ _ ]) (g [ _ ])) ([]⇒ g q)
 pa-eta f [ q ]⇒ = ⇒trans ([]⇒ f q) (pa-eta (f [ _ ]))
-pa2 α β [ q ]⇒ = {!!}
+⇒pa α β [ q ]⇒ = {!!}
 term-can f [ q ]⇒ = term-can (f [ _ ])
 eps f [ q ]⇒ = ⇒trans (eps (f [ _ ])) ([]⇒ f q)
 eta f [ q ]⇒ = ⇒trans ([]⇒ f q) (eta (f [ _ ]))
 unitl f [ q ]⇒ = ⇒trans (unitl (f [ _ ])) ([]⇒ f q)
 unitr f [ q ]⇒ = ⇒trans (unitr (f [ _ ])) ([]⇒ f q)
-assoc f g h [ q ]⇒ = ⇒trans (assoc (f [ _ ]) (g [ _ ]) (h [ _ ])) (⇒· ([]⇒ f q) (⇒· ([]⇒ g q) ([]⇒ h q)))
-⇒· p p' [ q ]⇒ = ⇒· (p [ q ]⇒) (p' [ q ]⇒)
-⇒pa p p' [ q ]⇒ = ⇒pa (p [ q ]⇒) (p' [ q ]⇒)
+assoc f g h [ q ]⇒ = ⇒trans (assoc (f [ _ ]) (g [ _ ]) (h [ _ ])) (_⇒·_ ([]⇒ f q) (_⇒·_ ([]⇒ g q) ([]⇒ h q)))
 ⇒abs p [ q ]⇒ = ⇒abs (p [ q ]⇒)
 ⇒refl {f = f} [ q ]⇒ = []⇒ f q
-⇒sym p [ q ]⇒ = ⇒sym (p [ ⇒SubSym q ]⇒)
 ⇒trans p p' [ q ]⇒ = ⇒trans (p [ q ]⇒) (p' [ ⇒SubRefl _ ]⇒)
 ⇒whiskl f α [ q ]⇒ = {!!}
 ⇒whiskr α f [ q ]⇒ = {!!}

@@ -119,6 +119,18 @@ data Con (n : ℕ) : Set where
 infixl 5 _▹_
 
 -- Presence in contexts
-data _∈_ {n : ℕ} (A : Arr n) : Con n → Set where
+data _∈_ {n : ℕ} (A : Arr n) : Con n → Type where
   here : {Γ : Con n} → A ∈ (Γ ▹ A)
   drop : {Γ : Con n} {B : Arr n} → A ∈ Γ → A ∈ (Γ ▹ B)
+
+-- Comparison of de Bruijn indices
+_≤∈_ : {n : ℕ} → {A B : Arr n} {Γ : Con n} → A ∈ Γ → B ∈ Γ → Type
+here ≤∈ B = ⊤
+drop A ≤∈ here = ⊥
+drop A ≤∈ drop B = A ≤∈ B
+
+_<∈_ : {n : ℕ} → {A B : Arr n} {Γ : Con n} → A ∈ Γ → B ∈ Γ → Type
+here <∈ here = ⊥
+here <∈ drop B = ⊤
+drop A <∈ here = ⊥
+drop A <∈ drop B = A <∈ B

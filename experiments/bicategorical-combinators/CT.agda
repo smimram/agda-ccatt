@@ -153,6 +153,21 @@ data _∈₂_ {n : ℕ} {Γ : Con n} {A : Arr n} (B : Arr₂ Γ A): Con₂ Γ �
   here : {Δ : Con₂ Γ} → B ∈₂ (Δ ▹₂ B)
   drop : {Δ : Con₂ Γ} {C : Arr₂ Γ A} → B ∈₂ Δ → B ∈₂ (Δ ▹₂ C)
 
+SublinearFrom : {n : ℕ} {Γ : Con n} {A : Arr n} → A ∈ Γ → Con₂ Γ → Type
+SublinearFrom n ε₂ = ⊤
+SublinearFrom n (Δ ▹₂ (var A , var B)) = B <∈ A ∧ SublinearFrom A Δ
+SublinearFrom n (_ ▹₂ (var _ , coh _ _ _)) = ⊥
+SublinearFrom n (_ ▹₂ (coh _ _ _ , _)) = ⊥
+
+-- A 2-context is sublinear
+Sublinear : {n : ℕ} {Γ : Con n} → Con₂ Γ → Type
+Sublinear ε₂ = ⊤
+Sublinear Δ@(_ ▹₂ (var _ , var B)) = SublinearFrom B Δ
+Sublinear (_ ▹₂ (var A , coh _ _ _)) = ⊥
+Sublinear (_ ▹₂ (coh _ _ _ , _)) = ⊥
+
+-- PS₂ : {n : ℕ} {Γ : Con n} (Δ : Con₂ Γ) {A : Arr n} → Arr₂ Γ A → Type
+
 -- 2-cells
 data Tm₂ {n : ℕ} {Γ : Con n} (Δ : Con₂ Γ) {A : Arr n} : Arr₂ Γ A → Set where
   var₂ : {B : Arr₂ Γ A} → B ∈₂ Δ → Tm₂ Δ B
