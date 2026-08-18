@@ -140,18 +140,27 @@ _[_]⇒ : {n n' : ℕ} {Γ : Con n} {Γ' : Con n'} {A : Arr n'} {t u : Tm Γ' A}
 pa-fst f g [ q ]⇒ = ⇒trans (pa-fst (f [ _ ]) (g [ _ ])) ([]⇒ f q)
 pa-snd f g [ q ]⇒ = ⇒trans (pa-snd (f [ _ ]) (g [ _ ])) ([]⇒ g q)
 pa-eta f [ q ]⇒ = ⇒trans ([]⇒ f q) (pa-eta (f [ _ ]))
-⇒pa α β [ q ]⇒ = {!!}
+pa-fst' f g [ q ]⇒ = ⇒trans ([]⇒ f q) (pa-fst' (f [ _ ]) (g [ _ ]))
+pa-snd' f g [ q ]⇒ = ⇒trans ([]⇒ g q) (pa-snd' (f [ _ ]) (g [ _ ]))
+pa-eta' f [ q ]⇒ = ⇒trans (pa-eta' (f [ _ ])) ([]⇒ f q)
+⇒pa α β [ q ]⇒ = ⇒pa (α [ q ]⇒) (β [ q ]⇒)
 term-can f [ q ]⇒ = term-can (f [ _ ])
+term-can' f [ q ]⇒ = term-can' (f [ _ ])
 eps f [ q ]⇒ = ⇒trans (eps (f [ _ ])) ([]⇒ f q)
 eta f [ q ]⇒ = ⇒trans ([]⇒ f q) (eta (f [ _ ]))
+eps' f [ q ]⇒ = ⇒trans ([]⇒ f q) (eps' (f [ _ ]))
+eta' f [ q ]⇒ = ⇒trans (eta' (f [ _ ])) ([]⇒ f q)
 unitl f [ q ]⇒ = ⇒trans (unitl (f [ _ ])) ([]⇒ f q)
 unitr f [ q ]⇒ = ⇒trans (unitr (f [ _ ])) ([]⇒ f q)
 assoc f g h [ q ]⇒ = ⇒trans (assoc (f [ _ ]) (g [ _ ]) (h [ _ ])) (_⇒·_ ([]⇒ f q) (_⇒·_ ([]⇒ g q) ([]⇒ h q)))
+unitl' f [ q ]⇒ = ⇒trans ([]⇒ f q) (unitl' (f [ _ ]))
+unitr' f [ q ]⇒ = ⇒trans ([]⇒ f q) (unitr' (f [ _ ]))
+assoc' f g h [ q ]⇒ = ⇒trans (_⇒·_ ([]⇒ f q) (_⇒·_ ([]⇒ g q) ([]⇒ h q))) (assoc' (f [ _ ]) (g [ _ ]) (h [ _ ]))
 ⇒abs p [ q ]⇒ = ⇒abs (p [ q ]⇒)
 ⇒refl {f = f} [ q ]⇒ = []⇒ f q
 ⇒trans p p' [ q ]⇒ = ⇒trans (p [ q ]⇒) (p' [ ⇒SubRefl _ ]⇒)
-⇒whiskl f α [ q ]⇒ = {!!}
-⇒whiskr α f [ q ]⇒ = {!!}
+⇒whiskl f α [ q ]⇒ = _⇒·_ ([]⇒ f q) (α [ q ]⇒)
+⇒whiskr α f [ q ]⇒ = _⇒·_ (α [ q ]⇒) ([]⇒ f q)
 
 -- Composition of substitutions
 _∘_ : {n n' n'' : ℕ} {Γ : Con n} {Γ' : Con n'} {Γ'' : Con n''} {τ : SubTy n n'} {τ' : SubTy n' n''} → Sub τ' Γ' Γ'' → Sub τ Γ Γ' → Sub (τ' ∘' τ) Γ Γ''
