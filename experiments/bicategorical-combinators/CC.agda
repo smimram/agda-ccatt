@@ -39,7 +39,7 @@ data _⇒_ {n : ℕ} {Γ : Con n} : {A : Arr n} → Tm Γ A → Tm Γ A → Type
   eps' : {A B C : Ty n} (f : Tm Γ (A × B , C)) → f ⇒ pa (fst · abs f) snd · app
   eta' : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → abs (pa (fst · f) snd · app) ⇒ f
   ⇒abs : {A B C : Ty n} {f f' : Tm Γ (A × B , C)} → f ⇒ f' → abs f ⇒ abs f'
-  --- category
+  --- (bi)category
   unitl : {A B : Ty n} (f : Tm Γ (A , B)) → id · f ⇒ f
   unitr : {A B : Ty n} (f : Tm Γ (A , B)) → f · id ⇒ f
   assoc : {A B C D : Ty n} (f : Tm Γ (A , B)) (g : Tm Γ (B , C)) (h : Tm Γ (C , D)) → (f · g) · h ⇒ f · (g · h)
@@ -63,8 +63,9 @@ data _∼_ {n : ℕ} {Γ : Con n} : {A B : Ty n} {t u : Tm Γ (A , B)} (α β : 
   ∼pa : {A B C : Ty n} {f f' : Tm Γ (A , B)} {g g' : Tm Γ (A , C)} {α α' : f ⇒ f'} {β β' : g ⇒ g'} → α ∼ α' → β ∼ β' → ⇒pa α β ∼ ⇒pa α' β'
   -- closure
   eta-eps : {A B C : Ty n} (f : Tm Γ (A , B ↝ C)) → ⇒trans (⇒whiskr (⇒pa (⇒whiskl fst (eta f)) ⇒refl) app) (eps (pa (fst · f) snd · app)) ∼ ⇒refl
-  -- coh eta-nat {a b c : .} {f g : a × b → c} (α : f → g) : co2 (eps f) α = co2 (co21 (F2 b (abs2 α)) app) (eps g)
-  -- coh eps-nat {a b c : .} {f g : a → b ⇒ c} (α : f → g) : co2 (eta f) (abs2 (co21 (F2 b α) app)) = co2 α (eta g)
+  eta-nat : {A B C : Ty n} {f g : Tm Γ (A × B , C)} (α : f ⇒ g) → ⇒trans (eps f) α ∼ ⇒trans (⇒whiskr (⇒pa (⇒whiskl fst (⇒abs α)) ⇒refl) app) (eps g)
+  eps-nat : {A B C : Ty n} {f g : Tm Γ (A , B ↝ C)} (α : f ⇒ g) → ⇒trans (eta f) (⇒abs (⇒whiskr (⇒pa (⇒whiskl fst α) ⇒refl) app)) ∼ ⇒trans α (eta g)
+  -- (bi)category
   ∼refl : {A : Arr n} {f g : Tm Γ A} (α : f ⇒ g) → α ∼ α
   ∼sym : {A : Arr n} {f g : Tm Γ A} {α β : f ⇒ g} → α ∼ β → β ∼ α
   ∼trans : {A : Arr n} {f g : Tm Γ A} {α β γ : f ⇒ g} → α ∼ β → β ∼ γ → α ∼ γ
