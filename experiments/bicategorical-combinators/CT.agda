@@ -153,9 +153,10 @@ data _∈₂_ {n : ℕ} {Γ : Con n} {A : Arr n} (B : Arr₂ Γ A): Con₂ Γ �
   here : {Δ : Con₂ Γ} → B ∈₂ (Δ ▹₂ B)
   drop : {Δ : Con₂ Γ} {C : Arr₂ Γ A} → B ∈₂ Δ → B ∈₂ (Δ ▹₂ C)
 
+-- variables are decreasing (strictly in an arrow and weakly between arrows)
 SublinearFrom : {n : ℕ} {Γ : Con n} {A : Arr n} → A ∈ Γ → Con₂ Γ → Type
 SublinearFrom n ε₂ = ⊤
-SublinearFrom n (Δ ▹₂ (var A , var B)) = B <∈ A ∧ SublinearFrom A Δ
+SublinearFrom n (Δ ▹₂ (var A , var B)) = n ≤∈ B ∧ B <∈ A ∧ SublinearFrom A Δ
 SublinearFrom n (_ ▹₂ (var _ , coh _ _ _)) = ⊥
 SublinearFrom n (_ ▹₂ (coh _ _ _ , _)) = ⊥
 
