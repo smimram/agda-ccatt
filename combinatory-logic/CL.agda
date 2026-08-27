@@ -74,13 +74,13 @@ SubTerm Γ = tt
 _[_] : {n : ℕ} {Γ : Con n} {n' : ℕ} {Γ' : Con n'} {A : Ty n'} → Tm Γ' A → {τ : SubTy n n'} (σ : Sub τ Γ Γ') → Tm Γ (A [ τ ]')
 var here [ σ , t ] = t
 var (drop x) [ σ , t ] = var x [ σ ]
-I [ σ ] = I
-K [ σ ] = K
-S [ σ ] = S
+I  [ σ ] = I
+K  [ σ ] = K
+S  [ σ ] = S
 P₁ [ σ ] = P₁
 P₂ [ σ ] = P₂
-P [ σ ] = P
-T [ σ ] = T
+P  [ σ ] = P
+T  [ σ ] = T
 (t $ u) [ σ ] = t [ σ ] $ u [ σ ]
 
 -- Equivalence of substitutions
