@@ -49,9 +49,6 @@ data _∼_ {n : ℕ} {Γ : Con' n} : {A : Ty n} → Tm Γ A → Tm Γ A → Type
   lamP : {A B C : Ty n} → _∼_ {A = (A ⇒ B × C) ⇒ A ⇒ B × C}
          (S $ (S $ (K $ S) $ (S $ (K $ (S $ (K $ P))) $ (S $ (K $ P₁)))) $ (S $ (K $ P₂)))
          I
-  -- The `lam*` rule for the terminal object: bracket abstraction of CC's `text`
-  -- axiom, `lam_a (a) ∼ lam_a (K $ T)`.  This is the one terminal primitive; the
-  -- η-rule `Tη`, `lamT`, and the schematic `lamTη` are all derived from it below.
   lamText : {A : Ty n} → _∼_ {A = (A ⇒ 𝟙) ⇒ A ⇒ 𝟙}
             I
             (K $ (K $ T))
