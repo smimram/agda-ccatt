@@ -1,0 +1,5 @@
+name: ua
+include: .
+depend: standard-library
+flags:
+  --allow-unsolved-metas
