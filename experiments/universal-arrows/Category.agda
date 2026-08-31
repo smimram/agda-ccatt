@@ -129,6 +129,29 @@ record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
              (isoʳ j))
     }
 
+  ----------------------------------------------------------------------
+  -- Invertible morphisms
+  ----------------------------------------------------------------------
+
+  -- being invertible, as a property of a given morphism: this is what
+  -- to use when the morphism is already at hand, whereas _≅_ is what to
+  -- use when it is part of the data
+  record Invertible {A B : Obj} (f : A ⇒ B) : Set (ℓ ⊔ e) where
+    field
+      inv  : B ⇒ A
+      invˡ : inv ∘ f ≈ id
+      invʳ : f ∘ inv ≈ id
+
+  open Invertible public
+
+  -- an invertible morphism is the same thing as the "to" direction of
+  -- an isomorphism
+  ≅-invertible : {A B : Obj} {f : A ⇒ B} → Invertible f → A ≅ B
+  ≅-invertible {f = f} i = mk≅ f (inv i) (invˡ i) (invʳ i)
+
+  invertible-≅ : {A B : Obj} (i : A ≅ B) → Invertible (to i)
+  invertible-≅ i = record { inv = from i ; invˡ = isoˡ i ; invʳ = isoʳ i }
+
   -- naturality transfers to the inverses of isomorphisms
   ≅-natural : {A B A' B' : Obj} (i : A ≅ B) (j : A' ≅ B')
               (f : A ⇒ A') (g : B ⇒ B') →

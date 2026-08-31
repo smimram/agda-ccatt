@@ -133,6 +133,16 @@ record Bicategory (o ℓ₁ ℓ₂ e : Level) : Set (suc (o ⊔ ℓ₁ ⊔ ℓ�
   ≅₂-trans : {A B : Obj} {f g h : A ⇒₁ B} → f ≅₂ g → g ≅₂ h → f ≅₂ h
   ≅₂-trans = Hom.≅-trans
 
+  -- invertibility, as a property of a given 2-cell
+  Invertible₂ : {A B : Obj} {f g : A ⇒₁ B} → f ⇒₂ g → Set (ℓ₂ ⊔ e)
+  Invertible₂ = Hom.Invertible
+
+  ≅₂-invertible : {A B : Obj} {f g : A ⇒₁ B} {α : f ⇒₂ g} → Invertible₂ α → f ≅₂ g
+  ≅₂-invertible = Hom.≅-invertible
+
+  invertible-≅₂ : {A B : Obj} {f g : A ⇒₁ B} (i : f ≅₂ g) → Invertible₂ (≅₂to i)
+  invertible-≅₂ = Hom.invertible-≅
+
   -- the setoid of 2-cells from f to g, and equational reasoning on 2-cells
   ⇒₂-setoid : {A B : Obj} (f g : A ⇒₁ B) → Setoid ℓ₂ e
   ⇒₂-setoid = Hom.hom-setoid

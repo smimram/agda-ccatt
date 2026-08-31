@@ -93,12 +93,13 @@ record Universal1
 
   field
     -- η is invertible
-    η⁻¹ : {x : C.Obj} (g : x C.⇒₁ U₀) → ⇑₁ (U₁ D.∘₁ F.F₁ g) C.⇒₂ g
-    η-isoˡ : {x : C.Obj} (g : x C.⇒₁ U₀) → η⁻¹ g C.• η g C.≈ C.id₂
-    η-isoʳ : {x : C.Obj} (g : x C.⇒₁ U₀) → η g C.• η⁻¹ g C.≈ C.id₂
+    η-invertible : {x : C.Obj} (g : x C.⇒₁ U₀) → C.Invertible₂ (η g)
+
+  η⁻¹ : {x : C.Obj} (g : x C.⇒₁ U₀) → ⇑₁ (U₁ D.∘₁ F.F₁ g) C.⇒₂ g
+  η⁻¹ g = C.Hom.inv (η-invertible g)
 
   η-iso : {x : C.Obj} (g : x C.⇒₁ U₀) → g C.≅₂ ⇑₁ (U₁ D.∘₁ F.F₁ g)
-  η-iso g = C.Hom.mk≅ (η g) (η⁻¹ g) (η-isoˡ g) (η-isoʳ g)
+  η-iso g = C.≅₂-invertible (η-invertible g)
 
   ----------------------------------------------------------------------
   -- Consequences of the universal property
