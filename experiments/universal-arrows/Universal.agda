@@ -56,13 +56,16 @@ record Universal1
     --   F x ---- F f̄ ----> F ȳ
     --    ‖         ε f ⇓    | u
     --   F x ------- f ----> y
-    ε : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → (U₁ D.∘₁ F.F₁ (⇑₁ f)) D.≅₂ f
+    ε : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → (U₁ D.∘₁ F.F₁ (⇑₁ f)) D.⇒₂ f
 
-  ε⇒ : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → (U₁ D.∘₁ F.F₁ (⇑₁ f)) D.⇒₂ f
-  ε⇒ f = D.≅₂to (ε f)
+    -- ε is invertible
+    ε-invertible : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → D.Invertible₂ (ε f)
 
-  ε⇐ : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → f D.⇒₂ (U₁ D.∘₁ F.F₁ (⇑₁ f))
-  ε⇐ f = D.≅₂from (ε f)
+  ε⁻¹ : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → f D.⇒₂ (U₁ D.∘₁ F.F₁ (⇑₁ f))
+  ε⁻¹ f = D.Hom.inv (ε-invertible f)
+
+  ε-iso : {x : C.Obj} (f : F.F₀ x D.⇒₁ y) → (U₁ D.∘₁ F.F₁ (⇑₁ f)) D.≅₂ f
+  ε-iso f = D.≅₂-invertible (ε-invertible f)
 
   ----------------------------------------------------------------------
   -- Factorization of 2-cells
@@ -76,12 +79,12 @@ record Universal1
     -- …such that (u ◁ F α') followed by ε f is α…
     ⇑₂-β : {x : C.Obj} {f : F.F₀ x D.⇒₁ y} {g : x C.⇒₁ U₀}
            (α : (U₁ D.∘₁ F.F₁ g) D.⇒₂ f) →
-           ε⇒ f D.• (U₁ D.◁ F.F₂ (⇑₂ α)) D.≈ α
+           ε f D.• (U₁ D.◁ F.F₂ (⇑₂ α)) D.≈ α
 
     -- …and α' is the only such 2-cell
     ⇑₂-unique : {x : C.Obj} {f : F.F₀ x D.⇒₁ y} {g : x C.⇒₁ U₀}
                 {α : (U₁ D.∘₁ F.F₁ g) D.⇒₂ f} (β : g C.⇒₂ ⇑₁ f) →
-                ε⇒ f D.• (U₁ D.◁ F.F₂ β) D.≈ α → β C.≈ ⇑₂ α
+                ε f D.• (U₁ D.◁ F.F₂ β) D.≈ α → β C.≈ ⇑₂ α
 
   ----------------------------------------------------------------------
   -- The unit
@@ -107,7 +110,7 @@ record Universal1
 
   -- every 2-cell into f̄ is the factorization of its own image
   ⇑₂-β' : {x : C.Obj} {f : F.F₀ x D.⇒₁ y} {g : x C.⇒₁ U₀}
-          (β : g C.⇒₂ ⇑₁ f) → β C.≈ ⇑₂ (ε⇒ f D.• (U₁ D.◁ F.F₂ β))
+          (β : g C.⇒₂ ⇑₁ f) → β C.≈ ⇑₂ (ε f D.• (U₁ D.◁ F.F₂ β))
   ⇑₂-β' β = ⇑₂-unique β D.≈-refl
 
   -- the factorization is compatible with equality of 2-cells
@@ -119,6 +122,6 @@ record Universal1
   -- two 2-cells with the same image are equal
   ⇑₂-cancel : {x : C.Obj} {f : F.F₀ x D.⇒₁ y} {g : x C.⇒₁ U₀}
               {α β : g C.⇒₂ ⇑₁ f} →
-              ε⇒ f D.• (U₁ D.◁ F.F₂ α) D.≈ ε⇒ f D.• (U₁ D.◁ F.F₂ β) → α C.≈ β
+              ε f D.• (U₁ D.◁ F.F₂ α) D.≈ ε f D.• (U₁ D.◁ F.F₂ β) → α C.≈ β
   ⇑₂-cancel {α = α} {β = β} p =
     C.≈-trans (⇑₂-unique α p) (C.≈-sym (⇑₂-β' β))
