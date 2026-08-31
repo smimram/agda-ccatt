@@ -44,19 +44,19 @@ below).
 ## Current state
 
 **Everything type-checks, with no holes, no postulates and no unsolved metas.**
-The ambient structure — bicategories and their morphisms — is in place, and
-both formulations of a biuniversal arrow are *stated*: `Universal` and
-`UniversalHA`, in `Universal.agda`. Nothing has yet been proved *about* them,
-and there is no example instance of either.
+The main result of the directory is done: both formulations of a biuniversal
+arrow are stated (`Universal` and `UniversalHA`) and proved equivalent, by two
+translations that are mutually inverse up to `_≈_` — all in `Universal.agda`.
 
-Not done yet: the two translations between `Universal` and `UniversalHA`,
-which are the point of the directory. Going from `Universal` to `UniversalHA`
-looks like bookkeeping — `η-triangle` is `⇑₂-β` at `id₂`, and the `⇑₂` of one
-record transports to the other's as `⇑₂ (α • ε f)`; the reverse direction is
-the real work, since uniqueness of `⇑₂` has to be recovered from `η` being
-invertible. Also not done: composition of bifunctors (`_∘F_` exists for
-ordinary functors, but the pseudofunctor case requires building the compositor
-of a composite and is a real proof) and transformations between bifunctors.
+There is still no example instance of either record, so the definitions have
+never been exercised on a concrete bicategory; `Universal→UniversalHA` and
+`UniversalHA→Universal` are the only things that build one, and they play the
+role `Id` plays in `Bifunctor.agda`.
+
+Not done yet: composition of bifunctors (`_∘F_` exists for ordinary functors,
+but the pseudofunctor case requires building the compositor of a composite and
+is a real proof), transformations between bifunctors, and the special cases the
+notes are aiming at (terminal objects, adjunctions).
 
 ## Architecture
 
@@ -73,8 +73,9 @@ Dependency order: `Category → Functor → Bifunctor → Universal`, and
 
   Also `record Invertible f` (`inv`, `invˡ`, `invʳ`), the *primitive* notion:
   it is what to reach for when the morphism is already at hand. Its algebra —
-  `mkInv`, `id-invertible`, `inv-invertible`, `∘-invertible` — is where the
-  actual proofs live. Isomorphisms are then *derived*, as the Σ-type
+  `mkInv`, `id-invertible`, `inv-invertible`, `∘-invertible`, and
+  `∘-cancelˡ`/`∘-cancelʳ` (an invertible morphism can be cancelled from either
+  side of an equation) — is where the actual proofs live. Isomorphisms are then *derived*, as the Σ-type
   `A ≅ B = Σ (A ⇒ B) Invertible`, with `to`/`invertible-≅` the two projections
   and `from`/`isoˡ`/`isoʳ`/`mk≅`/`≅-invertible` on top of them, so that
   `≅-refl`/`≅-sym`/`≅-trans` are one-liners over the `Invertible` algebra.
@@ -183,6 +184,28 @@ Dependency order: `Category → Functor → Bifunctor → Universal`, and
   `η-natural⇐` are one-liners via `Hom.≅-natural`, and they type-check only if
   the orientations of `ε`, `η` and the two naturality axioms are mutually
   consistent.
+
+  3. The **equivalence**, in a single anonymous module fixing `C`, `D`, `F`
+     and `y`. Both translations copy `U₀`, `U₁`, `⇑₁` and `ε` unchanged and only
+     rebuild `⇑₂` and `η`, which is why the round trips are definitional on the
+     first four components and only need a lemma on the last two.
+
+     - `Universal→UniversalHA` — `⇑₂ α` becomes `U.⇑₂ (α • ε f)` (composing with
+       `ε` puts `α` in the shape `U.⇑₂` expects) and `η-triangle` is literally
+       `⇑₂-β` at `id₂`. Only `η-natural` needs work: apply `⇑₂-cancel`, then
+       both sides collapse to `u ◁ F₂ α`.
+     - `UniversalHA→Universal` — `⇑₂ α` becomes `H.⇑₂ α • H.η g`. Everything
+       here rests on `◁-faithful`, the lemma that `u ◁ F₂ (−)` is faithful on
+       2-cells between 1-cells `x ⇒₁ ȳ`; it is what replaces the missing
+       uniqueness clause, and it is the only consumer of `⇑₂-cong` together
+       with the invertibility of `η`. `⇑₂-id` (`H.⇑₂ id₂ ≈ id₂`) follows from
+       it and is what makes the derived `η` invertible.
+     - `Universal-roundtrip-⇑₂`/`-η` and `UniversalHA-roundtrip-⇑₂`/`-η` — four
+       one-liners, each reusing the `⇑₂-β`/`⇑₂-unique` of the *translated*
+       structure rather than reproving anything.
+
+  Do **not** `open Universal public`: the two records deliberately share field
+  names, so access stays qualified (`U.ε`, `Universal.⇑₂-β R α`).
 
 ## Conventions
 

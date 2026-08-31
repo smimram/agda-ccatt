@@ -122,6 +122,27 @@ record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
              (invʳ i))
     }
 
+  -- an invertible morphism can be cancelled, on either side
+  ∘-cancelˡ : {A B E : Obj} {f : B ⇒ E} {g h : A ⇒ B} →
+              Invertible f → f ∘ g ≈ f ∘ h → g ≈ h
+  ∘-cancelˡ i p =
+    ≈-trans (≈-sym identityˡ)
+    (≈-trans (∘-congˡ (≈-sym (invˡ i)))
+    (≈-trans assoc
+    (≈-trans (∘-congʳ p)
+    (≈-trans assoc'
+    (≈-trans (∘-congˡ (invˡ i)) identityˡ)))))
+
+  ∘-cancelʳ : {A B E : Obj} {f g : B ⇒ E} {h : A ⇒ B} →
+              Invertible h → f ∘ h ≈ g ∘ h → f ≈ g
+  ∘-cancelʳ i p =
+    ≈-trans (≈-sym identityʳ)
+    (≈-trans (∘-congʳ (≈-sym (invʳ i)))
+    (≈-trans assoc'
+    (≈-trans (∘-congˡ p)
+    (≈-trans assoc
+    (≈-trans (∘-congʳ (invʳ i)) identityʳ)))))
+
   ----------------------------------------------------------------------
   -- Isomorphisms
   ----------------------------------------------------------------------
