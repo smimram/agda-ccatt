@@ -18,6 +18,7 @@ open import Level using (Level; _⊔_; suc)
 open import Relation.Binary.Core using (Rel)
 open import Relation.Binary.Structures using (IsEquivalence)
 open import Relation.Binary.Bundles using (Setoid)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂)
 
 record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
   eta-equality
@@ -83,60 +84,13 @@ record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
   assoc' = ≈-sym assoc
 
   ----------------------------------------------------------------------
-  -- Isomorphisms
-  ----------------------------------------------------------------------
-
-  infix 4 _≅_
-
-  record _≅_ (A B : Obj) : Set (ℓ ⊔ e) where
-    field
-      to   : A ⇒ B
-      from : B ⇒ A
-      isoˡ : from ∘ to ≈ id
-      isoʳ : to ∘ from ≈ id
-
-  open _≅_ public
-
-  -- builder, usable where the field names are not in scope
-  mk≅ : {A B : Obj} (f : A ⇒ B) (g : B ⇒ A) → g ∘ f ≈ id → f ∘ g ≈ id → A ≅ B
-  mk≅ f g p q = record { to = f ; from = g ; isoˡ = p ; isoʳ = q }
-
-  ≅-refl : {A : Obj} → A ≅ A
-  ≅-refl = record
-    { to   = id
-    ; from = id
-    ; isoˡ = identityˡ
-    ; isoʳ = identityˡ
-    }
-
-  ≅-sym : {A B : Obj} → A ≅ B → B ≅ A
-  ≅-sym i = record
-    { to   = from i
-    ; from = to i
-    ; isoˡ = isoʳ i
-    ; isoʳ = isoˡ i
-    }
-
-  ≅-trans : {A B C : Obj} → A ≅ B → B ≅ C → A ≅ C
-  ≅-trans i j = record
-    { to   = to j ∘ to i
-    ; from = from i ∘ from j
-    ; isoˡ = ≈-trans assoc
-             (≈-trans (∘-congʳ (≈-trans assoc' (≈-trans (∘-congˡ (isoˡ j)) identityˡ)))
-             (isoˡ i))
-    ; isoʳ = ≈-trans assoc
-             (≈-trans (∘-congʳ (≈-trans assoc' (≈-trans (∘-congˡ (isoʳ i)) identityˡ)))
-             (isoʳ j))
-    }
-
-  ----------------------------------------------------------------------
   -- Invertible morphisms
   ----------------------------------------------------------------------
 
-  -- being invertible, as a property of a given morphism: this is what
-  -- to use when the morphism is already at hand, whereas _≅_ is what to
-  -- use when it is part of the data
+  -- being invertible, as a property of a given morphism: this is the
+  -- primitive notion, isomorphisms below are derived from it
   record Invertible {A B : Obj} (f : A ⇒ B) : Set (ℓ ⊔ e) where
+    eta-equality
     field
       inv  : B ⇒ A
       invˡ : inv ∘ f ≈ id
@@ -144,13 +98,74 @@ record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
 
   open Invertible public
 
+  -- builder, usable where the field names are not in scope
+  mkInv : {A B : Obj} {f : A ⇒ B} (g : B ⇒ A) →
+          g ∘ f ≈ id → f ∘ g ≈ id → Invertible f
+  mkInv g p q = record { inv = g ; invˡ = p ; invʳ = q }
+
+  id-invertible : {A : Obj} → Invertible (id {A})
+  id-invertible = record { inv = id ; invˡ = identityˡ ; invʳ = identityˡ }
+
+  -- the inverse of an invertible morphism is invertible
+  inv-invertible : {A B : Obj} {f : A ⇒ B} (i : Invertible f) → Invertible (inv i)
+  inv-invertible {f = f} i = record { inv = f ; invˡ = invʳ i ; invʳ = invˡ i }
+
+  ∘-invertible : {A B C : Obj} {f : B ⇒ C} {g : A ⇒ B} →
+                 Invertible f → Invertible g → Invertible (f ∘ g)
+  ∘-invertible i j = record
+    { inv  = inv j ∘ inv i
+    ; invˡ = ≈-trans assoc
+             (≈-trans (∘-congʳ (≈-trans assoc' (≈-trans (∘-congˡ (invˡ i)) identityˡ)))
+             (invˡ j))
+    ; invʳ = ≈-trans assoc
+             (≈-trans (∘-congʳ (≈-trans assoc' (≈-trans (∘-congˡ (invʳ j)) identityˡ)))
+             (invʳ i))
+    }
+
+  ----------------------------------------------------------------------
+  -- Isomorphisms
+  ----------------------------------------------------------------------
+
+  infix 4 _≅_
+
+  -- an isomorphism is an invertible morphism together with its source:
+  -- _≅_ is what to use when the morphism is part of the data, Invertible
+  -- when it is already at hand
+  _≅_ : Obj → Obj → Set (ℓ ⊔ e)
+  A ≅ B = Σ (A ⇒ B) (Invertible {A} {B})
+
+  to : {A B : Obj} → A ≅ B → A ⇒ B
+  to = proj₁
+
+  invertible-≅ : {A B : Obj} (i : A ≅ B) → Invertible (to i)
+  invertible-≅ = proj₂
+
+  from : {A B : Obj} → A ≅ B → B ⇒ A
+  from i = inv (invertible-≅ i)
+
+  isoˡ : {A B : Obj} (i : A ≅ B) → from i ∘ to i ≈ id
+  isoˡ i = invˡ (invertible-≅ i)
+
+  isoʳ : {A B : Obj} (i : A ≅ B) → to i ∘ from i ≈ id
+  isoʳ i = invʳ (invertible-≅ i)
+
   -- an invertible morphism is the same thing as the "to" direction of
   -- an isomorphism
   ≅-invertible : {A B : Obj} {f : A ⇒ B} → Invertible f → A ≅ B
-  ≅-invertible {f = f} i = mk≅ f (inv i) (invˡ i) (invʳ i)
+  ≅-invertible {f = f} i = f , i
 
-  invertible-≅ : {A B : Obj} (i : A ≅ B) → Invertible (to i)
-  invertible-≅ i = record { inv = from i ; invˡ = isoˡ i ; invʳ = isoʳ i }
+  -- builder, usable where the field names are not in scope
+  mk≅ : {A B : Obj} (f : A ⇒ B) (g : B ⇒ A) → g ∘ f ≈ id → f ∘ g ≈ id → A ≅ B
+  mk≅ f g p q = f , mkInv g p q
+
+  ≅-refl : {A : Obj} → A ≅ A
+  ≅-refl = id , id-invertible
+
+  ≅-sym : {A B : Obj} → A ≅ B → B ≅ A
+  ≅-sym i = from i , inv-invertible (invertible-≅ i)
+
+  ≅-trans : {A B C : Obj} → A ≅ B → B ≅ C → A ≅ C
+  ≅-trans i j = to j ∘ to i , ∘-invertible (invertible-≅ j) (invertible-≅ i)
 
   -- naturality transfers to the inverses of isomorphisms
   ≅-natural : {A B A' B' : Obj} (i : A ≅ B) (j : A' ≅ B')
