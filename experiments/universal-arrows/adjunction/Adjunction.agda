@@ -31,7 +31,7 @@ open Cat using (Category)
 import Functor as Fun
 open Fun using (Functor; Id; _∘F_)
 import adjunction.NaturalTransformation as NatTrans
-open NatTrans using (NaturalTransformation; _≅N_; mk≅N)
+open NatTrans using (NaturalTransformation; [_,_]; _≅N_; ≅N-pointwise)
 
 private
   variable
@@ -191,11 +191,13 @@ L ⊣ R = Adjunction L R
 -- Adjoint equivalences
 ------------------------------------------------------------------------
 
--- An equivalence is an adjunction whose unit and counit are invertible.
--- As in Category.agda, invertibility of the components is the primitive
--- notion, the natural isomorphisms η-iso/ε-iso being derived from it;
--- being invertible componentwise is enough, since the naturality of the
--- inverses comes for free (mk≅N).
+-- An equivalence is an adjunction whose unit and counit are natural
+-- isomorphisms. Since the two transformations are already at hand, this
+-- is stated as their invertibility in the functor categories [ C , C ]
+-- and [ D , D ], which is what Category.agda recommends: the equations
+-- are then equalities of natural transformations, and invertibility of
+-- the components is a consequence (η-invertible/ε-invertible below)
+-- rather than the definition.
 record Equivalence {C : Category o ℓ e} {D : Category o' ℓ' e'}
        (L : Functor C D) (R : Functor D C) :
        Set (o ⊔ ℓ ⊔ e ⊔ o' ⊔ ℓ' ⊔ e') where
@@ -204,6 +206,8 @@ record Equivalence {C : Category o ℓ e} {D : Category o' ℓ' e'}
   private module D = Category D
   private module L = Functor L
   private module R = Functor R
+  private module [C,C] = Category [ C , C ]
+  private module [D,D] = Category [ D , D ]
 
   field
     adjunction : L ⊣ R
@@ -213,41 +217,57 @@ record Equivalence {C : Category o ℓ e} {D : Category o' ℓ' e'}
   open Adjunction adjunction public
 
   field
-    η-invertible : (A : C.Obj) → C.Invertible (η A)
-    ε-invertible : (B : D.Obj) → D.Invertible (ε B)
+    unit-invertible   : [C,C].Invertible unit
+    counit-invertible : [D,D].Invertible counit
 
   ----------------------------------------------------------------------
-  -- The inverses of the unit and the counit
+  -- The unit and the counit as natural isomorphisms
   ----------------------------------------------------------------------
 
+  unit-iso : Id ≅N (R ∘F L)
+  unit-iso = [C,C].≅-invertible unit-invertible
+
+  counit-iso : (L ∘F R) ≅N Id
+  counit-iso = [D,D].≅-invertible counit-invertible
+
+  -- the inverse natural transformations
+  unit⁻¹ : NaturalTransformation (R ∘F L) Id
+  unit⁻¹ = [C,C].inv unit-invertible
+
+  counit⁻¹ : NaturalTransformation Id (L ∘F R)
+  counit⁻¹ = [D,D].inv counit-invertible
+
+  private module u⁻¹ = NaturalTransformation unit⁻¹
+  private module c⁻¹ = NaturalTransformation counit⁻¹
+
+  ----------------------------------------------------------------------
+  -- Consequences on the components
+  ----------------------------------------------------------------------
+
+  -- the components of the inverses, with the composites in the types
+  -- unfolded, as for η and ε in Adjunction
   η⁻¹ : (A : C.Obj) → R.F₀ (L.F₀ A) C.⇒ A
-  η⁻¹ A = C.inv (η-invertible A)
+  η⁻¹ = u⁻¹.η
 
   ε⁻¹ : (B : D.Obj) → B D.⇒ L.F₀ (R.F₀ B)
-  ε⁻¹ B = D.inv (ε-invertible B)
+  ε⁻¹ = c⁻¹.η
 
-  -- the unit and the counit, as natural isomorphisms
-  η-iso : Id ≅N (R ∘F L)
-  η-iso = mk≅N unit η-invertible
-
-  ε-iso : (L ∘F R) ≅N Id
-  ε-iso = mk≅N counit ε-invertible
-
-  -- naturality read through the inverses: as elsewhere, these are the
-  -- check that the orientations agree, being one-liners via ≅-natural
+  -- naturality read through the inverses is nothing but the naturality
+  -- of the inverse transformations
   η-natural⇐ : {A B : C.Obj} (f : A C.⇒ B) →
                η⁻¹ B C.∘ R.F₁ (L.F₁ f) C.≈ f C.∘ η⁻¹ A
-  η-natural⇐ {A} {B} f =
-    C.≅-natural (C.≅-invertible (η-invertible A))
-                (C.≅-invertible (η-invertible B))
-                f (R.F₁ (L.F₁ f)) (C.≈-sym (η-natural f))
+  η-natural⇐ = u⁻¹.natural
 
   ε-natural⇐ : {A B : D.Obj} (f : A D.⇒ B) →
                ε⁻¹ B D.∘ f D.≈ L.F₁ (R.F₁ f) D.∘ ε⁻¹ A
-  ε-natural⇐ {A} {B} f =
-    D.≅-natural (D.≅-invertible (ε-invertible A))
-                (D.≅-invertible (ε-invertible B))
-                (L.F₁ (R.F₁ f)) f (D.≈-sym (ε-natural f))
+  ε-natural⇐ = c⁻¹.natural
+
+  -- a natural isomorphism is in particular a pointwise one
+  η-invertible : (A : C.Obj) → C.Invertible (η A)
+  η-invertible = ≅N-pointwise unit-iso
+
+  ε-invertible : (B : D.Obj) → D.Invertible (ε B)
+  ε-invertible = ≅N-pointwise counit-iso
 
 ------------------------------------------------------------------------
 -- The identity adjunction and equivalence
@@ -270,10 +290,26 @@ Id⊣Id {C = C} = record
   }
   where module C = Category C
 
+-- the inverses being again the identity, only the (definitionally equal)
+-- types of the four transformations at play differ
 Id≃Id : {C : Category o ℓ e} → Equivalence (Id {C = C}) (Id {C = C})
 Id≃Id {C = C} = record
-  { adjunction   = Id⊣Id
-  ; η-invertible = λ A → C.id-invertible
-  ; ε-invertible = λ B → C.id-invertible
+  { adjunction        = Id⊣Id
+  ; unit-invertible   = [C,C].mkInv unit⁻¹   (λ A → C.identityˡ) (λ A → C.identityˡ)
+  ; counit-invertible = [C,C].mkInv counit⁻¹ (λ A → C.identityˡ) (λ A → C.identityˡ)
   }
-  where module C = Category C
+  where
+    module C = Category C
+    module [C,C] = Category [ C , C ]
+
+    unit⁻¹ : NaturalTransformation (Id ∘F Id) (Id {C = C})
+    unit⁻¹ = record
+      { η       = λ A → C.id
+      ; natural = λ f → C.≈-trans C.identityˡ (C.≈-sym C.identityʳ)
+      }
+
+    counit⁻¹ : NaturalTransformation (Id {C = C}) (Id ∘F Id)
+    counit⁻¹ = record
+      { η       = λ A → C.id
+      ; natural = λ f → C.≈-trans C.identityˡ (C.≈-sym C.identityʳ)
+      }
