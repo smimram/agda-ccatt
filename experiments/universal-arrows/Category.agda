@@ -122,6 +122,24 @@ record Category (o ℓ e : Level) : Set (suc (o ⊔ ℓ ⊔ e)) where
              (invʳ i))
     }
 
+  -- two morphisms with the same inverse are equal
+  inv-cong : {A B : Obj} {f g : A ⇒ B} (i : Invertible f) (j : Invertible g) →
+             inv i ≈ inv j → f ≈ g
+  inv-cong {f = f} {g = g} i j p =
+    ≈-trans (≈-sym identityʳ)
+    (≈-trans (∘-congʳ (≈-trans (≈-sym (invˡ j)) (∘-congˡ (≈-sym p))))
+    (≈-trans assoc'
+    (≈-trans (∘-congˡ (invʳ i)) identityˡ)))
+
+  -- equal morphisms have equal inverses
+  inv-resp : {A B : Obj} {f g : A ⇒ B} (i : Invertible f) (j : Invertible g) →
+             f ≈ g → inv i ≈ inv j
+  inv-resp i j p =
+    ≈-trans (≈-sym identityˡ)
+    (≈-trans (∘-congˡ (≈-trans (≈-sym (invˡ j)) (∘-congʳ (≈-sym p))))
+    (≈-trans assoc
+    (≈-trans (∘-congʳ (invʳ i)) identityʳ)))
+
   -- an invertible morphism can be cancelled, on either side
   ∘-cancelˡ : {A B E : Obj} {f : B ⇒ E} {g h : A ⇒ B} →
               Invertible f → f ∘ g ≈ f ∘ h → g ≈ h

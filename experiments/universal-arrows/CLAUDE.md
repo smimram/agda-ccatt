@@ -60,16 +60,19 @@ blocked on Kelly's lemma (`unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`), which `Bicateg
 does not prove.
 
 Biadjunctions (`adjunction/Biadjunction.agda`) are defined in the hom-wise
-formulation, again with no instance, and
-`adjunction/UniversalBiadjunction.agda` defines the pointwise presentation
-(a biuniversal arrow to every object). Nothing connects the two yet.
+formulation and `adjunction/UniversalBiadjunction.agda` defines the pointwise
+one (a biuniversal arrow to every object). The two are connected:
+`adjunction/UniversalToBiadjunction.agda` proves that a `UniversalBiadjunction`
+gives a `Biadjunction`, right biadjoint included. That file is the only
+consumer of `Universal.agda`, and the biggest proof in the directory.
 
 Not done yet: composition of bifunctors (`_∘F_` exists for ordinary functors,
 but the pseudofunctor case requires building the compositor of a composite and
 is a real proof), modifications, the unit-counit formulation of a biadjunction
-(which needs both of those), the passage from a `UniversalBiadjunction` to a
-`Biadjunction` (which needs `R` as a `Bifunctor`, hence its compositor), and
-the special cases the notes are aiming at (terminal objects, adjunctions).
+(which needs both of those), an identity or a composition of pseudonatural
+transformations (the identity needs `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is *not*
+among the Kelly lemmas proved in `Bicategory.agda`), and the special cases the
+notes are aiming at (terminal objects, adjunctions).
 
 ## Architecture
 
@@ -136,7 +139,24 @@ and, in `adjunction/`, `NaturalTransformation → Adjunction` and
      1-cell, as a `Functor` between hom-categories — this is why the file
      imports `Functor.agda`), the 2-iso algebra `_∗≅_`/`_◁≅_`/`_▷≅_`, and
      the reverse naturalities `assoc-natural⇐`, `unitˡ-natural⇐`,
-     `unitʳ-natural⇐` (each a one-liner via `Hom.≅-natural`).
+     `unitʳ-natural⇐`, `pentagon⇐` (each a one-liner via `Hom.≅-natural`,
+     `Hom.inv-resp` or `Hom.inv-cong`).
+  7. Unit coherence, after Kelly: `◁-id₁-faithful`/`▷-id₁-faithful`
+     (whiskering by `id₁` is faithful, since the unitors are natural isos) and
+     then `unitˡ-∘`, `unitʳ-∘` and their inverted forms `unitˡ-∘'`,
+     `unitˡ⇐-∘`, `unitʳ⇐-∘`, `triangle⇐`. These are *consequences* of the
+     triangle and the pentagon, not axioms; `unitˡ-∘` is proved by Kelly's
+     argument (compare the two sides after whiskering by `id₁`).
+  8. Pasting of squares. A square is a 2-cell `u₂ ∘ p ⇒ q ∘ u₁`; `paste`
+     composes two of them side by side and `paste-assoc` says that pasting is
+     associative up to the associators of the two rows — four pentagon
+     instances and three associator naturalities. `paste-cong`, `paste-▷` and
+     `paste-◁` absorb a 2-cell of the top or bottom row into the neighbouring
+     square. `fpaste` and its `fpaste-assoc`/`fpaste-cong`/`fpaste-▷`/
+     `fpaste-◁` are the same for a *final* square `u₁ ∘ p₁ ⇒ q₁`, which is the
+     shape `ε` has. This section exists for
+     `adjunction/UniversalToBiadjunction.agda`: every coherence proof there is
+     a pasting identity.
 
   There is deliberately **no example instance**: the derived lemmas play that
   role. `∗-decomposeˡ`, `exchange` and the `⇐`-naturalities do not type-check
@@ -289,6 +309,41 @@ and, in `adjunction/`, `NaturalTransformation → Adjunction` and
   — no functoriality is proved, and none is needed to state the record. Making
   `R` a `Bifunctor`, and hence relating this record to `Biadjunction`, is the
   next step and a real proof.
+
+- **`adjunction/UniversalToBiadjunction.agda`** — the theorem: a
+  `UniversalBiadjunction F` gives a `Biadjunction F R`. It is by far the
+  largest file, and everything in it is organised around one idea: a 2-cell
+  into a `⇑₁` is determined by its image under `w = u ◁ F₂ (−)`, so every
+  equation is checked in `D` after applying `w`.
+
+  1. The calculus of `⇑₂`: `w` with `w-cong`/`w-id`/`w-•`, the transposition
+     `Φ₂ γ = ⇑₂ (γ • ε f)` with its functoriality, `⇑₂-∘ˡ`/`⇑₂-∘ʳ` (composing
+     a factorization on either side), `w-⇑₂` (`w (⇑₂ γ) ≈ ε⁻¹ • γ`, the
+     rewriting rule that sends everything back into `D`), `w-faithful` — which
+     works for *arbitrary* parallel 2-cells, not just those into a `⇑₁`, the
+     unit bridging the gap — and `⇑₂-invertible`.
+  2. The hom-equivalence: `Φ`/`Ψ` as functors, `Φ-unit = ε⁻¹`,
+     `Φ-counit = η⁻¹`, both triangle identities, `Φ-equivalence`.
+  3. The right biadjoint `R`, as a `Bifunctor`: `Rhom`, the compositor `R-∘`
+     and unitor `R-id` (built with `⇑₂-invertible` from the pastings `R-P` and
+     `R-Q`), then the four axioms — `R-∘-natural`, `R-unitˡ`, `R-unitʳ`,
+     `R-assoc`. `R-assoc` is the deep one: `R-P` is literally a `paste`
+     (`R-P-paste`), so the axiom is `paste-assoc` once the comparison 2-cells
+     of `F` have been peeled off with `F₂-assoc`.
+  4. The comparisons `Φ-natˡ`/`Φ-natʳ` (defined in the `⇐` direction, as
+     `⇑₂` of the pastings `Pˡ`/`Pʳ`, so that their targets are `⇑₁`s and
+     `⇑₂-cancel` applies; the `⇒` direction is their inverse), their
+     naturality, and the five coherence axioms of `Biadjunction`. Each is
+     proved in the `⇐` direction and transported by `Hom.inv-cong`; the two
+     `∘`-axioms are `paste-assoc`/`fpaste-assoc` instances, the two `id`-axioms
+     rest on the Kelly lemmas, and `Φ-exchange` is the pentagon-level argument
+     relating the two comparisons.
+  5. `biadjunction : F ⊣₂ R`, the record itself.
+
+  **When a proof here breaks**, look first at the orientation of `ε`, of the
+  comparison 2-cells of `F`, and at whether a `paste`-lemma is being used in
+  the `⇒` or the `⇐` direction: those are the three things every proof depends
+  on.
 
 ## Conventions
 

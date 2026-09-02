@@ -84,6 +84,9 @@ where it writes `α ⨟ β` the Agda reads `β • α`.
 - `adjunction/UniversalBiadjunction.agda` — the pointwise presentation: a
   pseudofunctor admitting a biuniversal arrow to every object, i.e. having a
   right biadjoint.
+- `adjunction/UniversalToBiadjunction.agda` — the theorem that the pointwise
+  presentation yields a biadjunction: the right biadjoint is built as a
+  pseudofunctor and the hom-wise equivalences are shown pseudonatural.
 - `universal1.tex`, `universal2.tex` — the notes the two formulations
   transcribe.
 
@@ -121,16 +124,19 @@ Tested with Agda 2.8.0 and agda-stdlib v2.4.
 The equivalence is complete. There is as yet no example instance of either
 record, so the definitions have never been exercised on a concrete bicategory,
 and none of the special cases the notes are aiming at — terminal objects,
-adjunctions — have been derived. Pseudonatural transformations and
-biadjunctions are defined but not yet exercised either: there is no identity
-and no vertical composition of pseudonatural transformations (the identity one
-needs Kelly's lemma `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is not available yet), and
-no example of a biadjunction. The two presentations of a biadjunction are not
-connected either: `UniversalBiadjunction` yields `R₀`, `R₁` and `R₂`, but
-turning those into a `Bifunctor` and then into a `Biadjunction` needs the
-compositor of `R` and is a real proof. Composition of pseudofunctors,
-modifications and the unit-counit formulation of a biadjunction are also still
-missing.
+adjunctions — have been derived.
+
+The two presentations of a biadjunction *are* connected:
+`adjunction/UniversalToBiadjunction.agda` turns a `UniversalBiadjunction` into
+a `Biadjunction`, building the right biadjoint as a genuine pseudofunctor
+(compositor, unitor and all four coherence axioms) and proving the hom-wise
+equivalences pseudonatural (both comparisons and all five coherence axioms).
+
+Pseudonatural transformations are defined but not exercised: there is no
+identity and no vertical composition of them (the identity one needs Kelly's
+lemma, which `Bicategory.agda` now proves, plus `λ_id ≈ ρ_id`, which it does
+not). Composition of pseudofunctors, modifications and the unit-counit
+formulation of a biadjunction are also still missing.
 
 ## Tool disclosure
 
