@@ -53,10 +53,18 @@ never been exercised on a concrete bicategory; `Universal→UniversalHA` and
 `UniversalHA→Universal` are the only things that build one, and they play the
 role `Id` plays in `Bifunctor.agda`.
 
+Pseudonatural transformations between bifunctors are defined
+(`adjunction/PseudonaturalTransformation.agda`) but have no instance either:
+neither the identity nor vertical composition is built, the identity being
+blocked on Kelly's lemma (`unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`), which `Bicategory.agda`
+does not prove.
+
 Not done yet: composition of bifunctors (`_∘F_` exists for ordinary functors,
 but the pseudofunctor case requires building the compositor of a composite and
-is a real proof), transformations between bifunctors, and the special cases the
-notes are aiming at (terminal objects, adjunctions).
+is a real proof), modifications, and the special cases the notes are aiming at
+(terminal objects, adjunctions). Note also that `adjunction/Biadjunction.agda`
+is an empty placeholder, which makes `agda --build-library` fail with a
+`ModuleNameDoesntMatchFileName` error until it gets a module header.
 
 ## Architecture
 
@@ -206,6 +214,26 @@ Dependency order: `Category → Functor → Bifunctor → Universal`, and
 
   Do **not** `open Universal public`: the two records deliberately share field
   names, so access stays qualified (`U.ε`, `Universal.⇑₂-β R α`).
+
+- **`adjunction/PseudonaturalTransformation.agda`** — pseudonatural
+  transformations `τ : F ⇒ G` between two `Bifunctor C D`. Data: the component
+  `τ₁ A : F₀ A ⇒₁ G₀ A` at an object (the subscript marks the dimension of the
+  cell, as everywhere else), and the *naturator*, an invertible 2-cell
+  `naturator f : τ₁ B ∘₁ F₁ f ≅₂ G₁ f ∘₁ τ₁ A`, with the directed aliases
+  `τ₂⇒`/`τ₂⇐`. The orientation is the **oplax** one, from `τ ∘ F f` towards
+  `G f ∘ τ`; flipping it means flipping all three axioms. Those are
+  `τ₂-natural` (naturality in 2-cells, stated in the `g • to i ≈ to j • f`
+  shape of `Bifunctor.F-∘-natural`, precisely so that the `⇐` version is a
+  one-liner), `τ₂-∘` (coherence with `F-∘⇒`/`G-∘⇒` and the associators) and
+  `τ₂-id` (coherence with `F-id⇒`/`G-id⇒` and the unitors). Derived:
+  `τ₂-natural⇐`, via `D.Hom.≅-natural` — as in `Bicategory.agda`, that
+  one-liner is the consistency check standing in for the missing example
+  instance, and it type-checks only if the naturator's orientation and
+  `τ₂-natural` agree.
+
+  `η` is deliberately *not* reused for the components, unlike in
+  `adjunction/NaturalTransformation.agda`, since `η` already names the unit of
+  a biuniversal arrow.
 
 ## Conventions
 

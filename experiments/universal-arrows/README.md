@@ -72,6 +72,13 @@ where it writes `α ⨟ β` the Agda reads `β • α`.
 - `Bifunctor.agda` — pseudofunctors (homomorphisms of bicategories).
 - `Universal.agda` — both definitions of a biuniversal arrow, and their
   equivalence.
+- `adjunction/NaturalTransformation.agda` — natural transformations, and the
+  functor category.
+- `adjunction/Adjunction.agda` — adjunctions and adjoint equivalences between
+  categories, the 1-categorical warm-up.
+- `adjunction/PseudonaturalTransformation.agda` — pseudonatural
+  transformations between pseudofunctors: the naturality square commutes only
+  up to an invertible 2-cell.
 - `universal1.tex`, `universal2.tex` — the notes the two formulations
   transcribe.
 
@@ -107,7 +114,11 @@ Tested with Agda 2.8.0 and agda-stdlib v2.4.
 The equivalence is complete. There is as yet no example instance of either
 record, so the definitions have never been exercised on a concrete bicategory,
 and none of the special cases the notes are aiming at — terminal objects,
-adjunctions — have been derived. Composition of pseudofunctors and
-transformations between them are also still missing.
+adjunctions — have been derived. Pseudonatural transformations are defined but
+not yet exercised either: there is no identity and no vertical composition of
+them (the identity one needs Kelly's lemma `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is
+not available yet). Composition of pseudofunctors is also still missing.
 
-This is mostly auto-formalized with Claude.
+## Tool disclosure
+
+This is mostly auto-formalized with Claude (Opus 5).
