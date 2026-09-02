@@ -24,6 +24,8 @@ import Relation.Binary.Reasoning.Setoid as SetoidReasoning
 
 import Category as Cat
 open Cat using (Category)
+import Functor as Fun
+open Fun using (Functor)
 
 -- o  : level of objects
 -- ℓ₁ : level of 1-cells
@@ -286,6 +288,31 @@ record Bicategory (o ℓ₁ ℓ₂ e : Level) : Set (suc (o ⊔ ℓ₁ ⊔ ℓ�
   exchange : {A B C : Obj} {f f' : B ⇒₁ C} {g g' : A ⇒₁ B}
              (α : f ⇒₂ f') (β : g ⇒₂ g') → (α ▷ g') • (f ◁ β) ≈ (f' ◁ β) • (α ▷ g)
   exchange α β = ≈-trans (≈-sym (∗-decomposeˡ α β)) (∗-decomposeʳ α β)
+
+  ----------------------------------------------------------------------
+  -- Composition as a functor in each variable
+  ----------------------------------------------------------------------
+
+  -- composing with a fixed 1-cell on the left is a functor between
+  -- hom-categories, acting on 2-cells by whiskering
+  postcomp : {A B C : Obj} (f : B ⇒₁ C) → Functor (hom A B) (hom A C)
+  postcomp f = record
+    { F₀     = λ g → f ∘₁ g
+    ; F₁     = λ β → f ◁ β
+    ; F-cong = ◁-cong f
+    ; F-id   = ◁-id f _
+    ; F-∘    = λ β' β → ◁-• f β' β
+    }
+
+  -- and so is composing with a fixed 1-cell on the right
+  precomp : {A B C : Obj} (g : A ⇒₁ B) → Functor (hom B C) (hom A C)
+  precomp g = record
+    { F₀     = λ f → f ∘₁ g
+    ; F₁     = λ α → α ▷ g
+    ; F-cong = ▷-cong g
+    ; F-id   = ▷-id _ g
+    ; F-∘    = λ α' α → ▷-• α' α g
+    }
 
   ----------------------------------------------------------------------
   -- Horizontal composition of invertible 2-cells

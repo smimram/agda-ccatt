@@ -59,17 +59,21 @@ neither the identity nor vertical composition is built, the identity being
 blocked on Kelly's lemma (`unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`), which `Bicategory.agda`
 does not prove.
 
+Biadjunctions (`adjunction/Biadjunction.agda`) are defined in the hom-wise
+formulation, again with no instance.
+
 Not done yet: composition of bifunctors (`_∘F_` exists for ordinary functors,
 but the pseudofunctor case requires building the compositor of a composite and
-is a real proof), modifications, and the special cases the notes are aiming at
-(terminal objects, adjunctions). Note also that `adjunction/Biadjunction.agda`
-is an empty placeholder, which makes `agda --build-library` fail with a
-`ModuleNameDoesntMatchFileName` error until it gets a module header.
+is a real proof), modifications, the unit-counit formulation of a biadjunction
+(which needs both of those), and the special cases the notes are aiming at
+(terminal objects, adjunctions).
 
 ## Architecture
 
-Dependency order: `Category → Functor → Bifunctor → Universal`, and
-`Category → Bicategory → Bifunctor`.
+Dependency order: `Category → Functor → Bicategory → Bifunctor → Universal`,
+and, in `adjunction/`, `NaturalTransformation → Adjunction` and
+`Bifunctor → PseudonaturalTransformation`, with `Biadjunction` on top of
+`Bifunctor`, `NaturalTransformation` and `Adjunction`.
 
 - **`Category.agda`** — setoid-enriched categories. `record Category o ℓ e`
   with `Obj`, `_⇒_`, `_≈_`, `id`, `_∘_` and the laws (`≈-equiv`, `∘-cong`,
@@ -125,7 +129,9 @@ Dependency order: `Category → Functor → Bifunctor → Universal`, and
      coherence (`triangle`, `pentagon`).
   6. Derived: `◁-cong`/`▷-cong`, `◁-id`/`▷-id`, `◁-•`/`▷-•`,
      `∗-decomposeˡ`/`∗-decomposeʳ` (horizontal composition as two whiskerings,
-     in both orders), `exchange`, the 2-iso algebra `_∗≅_`/`_◁≅_`/`_▷≅_`, and
+     in both orders), `exchange`, `postcomp`/`precomp` (composing with a fixed
+     1-cell, as a `Functor` between hom-categories — this is why the file
+     imports `Functor.agda`), the 2-iso algebra `_∗≅_`/`_◁≅_`/`_▷≅_`, and
      the reverse naturalities `assoc-natural⇐`, `unitˡ-natural⇐`,
      `unitʳ-natural⇐` (each a one-liner via `Hom.≅-natural`).
 
@@ -234,6 +240,33 @@ Dependency order: `Category → Functor → Bifunctor → Universal`, and
   `η` is deliberately *not* reused for the components, unlike in
   `adjunction/NaturalTransformation.agda`, since `η` already names the unit of
   a biuniversal arrow.
+
+- **`adjunction/Biadjunction.agda`** — biadjunctions, hom-wise: bifunctors
+  `L : C → D` and `R : D → C` with a family of adjoint equivalences of
+  hom-categories `Φ A B : D (L A , B) ≃ C (A , R B)` (fields `Φ`, `Ψ`,
+  `equivalence`, the last one an `Equivalence` from
+  `adjunction/Adjunction.agda`), pseudonatural in both variables. Derived from
+  the family: `Φ₁`/`Ψ₁` on 1-cells, `Φ₂`/`Ψ₂` on 2-cells, and `η`/`ε` with
+  their invertibility.
+
+  Pseudonaturality is split by variable, as `Φ-naturalˡ f B` and
+  `Φ-naturalʳ A g`, each a `_≅N_` between composites of pre-/postcomposition
+  functors — which is why `Bicategory.agda` gained `precomp`/`postcomp`.
+  Stating them in a functor category means naturality in the 2-cells of the
+  hom-categories is part of the datum (`Φ-natˡ-natural` and friends are then
+  read off with `≅N⇒-natural`), rather than a further axiom. Directed aliases
+  `Φ-natˡ⇒`/`Φ-natˡ⇐`/`Φ-natʳ⇒`/`Φ-natʳ⇐` are the components.
+
+  Four coherence axioms then say the family is genuinely pseudonatural:
+  `Φ-exchange` (the two squares paste in either order), `Φ-naturalˡ-∘` and
+  `Φ-naturalʳ-∘` (compatibility with composition, through `L-∘⇒`/`R-∘⇒` and
+  the associators), `Φ-naturalˡ-id` and `Φ-naturalʳ-id` (compatibility with
+  identities, through `L-id⇒`/`R-id⇒` and the unitors). The two families are
+  *not* symmetric — `Φ-naturalˡ` has `L` on the source side of the square and
+  `Φ-naturalʳ` has `R` on its target side — so their axioms are not mirror
+  images of each other; that asymmetry is expected, not a transcription slip.
+
+  Notation: `L ⊣₂ R`, mirroring `_⊣_` in `adjunction/Adjunction.agda`.
 
 ## Conventions
 

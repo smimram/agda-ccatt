@@ -201,6 +201,22 @@ module _ {C : Category o ℓ e} {D : Category o' ℓ' e'} where
          ((A : C.Obj) → D.Invertible (η α A)) → F ≅N G
   mk≅N α i = [C,D].≅-invertible (pointwise-invertible α i)
 
+  -- the components of a natural isomorphism, in both directions
+  ≅N⇒ : {F G : Functor C D} → F ≅N G → (A : C.Obj) → F₀ F A D.⇒ F₀ G A
+  ≅N⇒ i A = η ([C,D].to i) A
+
+  ≅N⇐ : {F G : Functor C D} → F ≅N G → (A : C.Obj) → F₀ G A D.⇒ F₀ F A
+  ≅N⇐ i A = η ([C,D].from i) A
+
+  -- the naturality squares of a natural isomorphism, in both directions
+  ≅N⇒-natural : {F G : Functor C D} (i : F ≅N G) {A B : C.Obj} (f : A C.⇒ B) →
+                ≅N⇒ i B D.∘ F₁ F f D.≈ F₁ G f D.∘ ≅N⇒ i A
+  ≅N⇒-natural i f = natural ([C,D].to i) f
+
+  ≅N⇐-natural : {F G : Functor C D} (i : F ≅N G) {A B : C.Obj} (f : A C.⇒ B) →
+                ≅N⇐ i B D.∘ F₁ G f D.≈ F₁ F f D.∘ ≅N⇐ i A
+  ≅N⇐-natural i f = natural ([C,D].from i) f
+
   -- conversely, the components of a natural isomorphism are invertible
   ≅N-pointwise : {F G : Functor C D} (i : F ≅N G) (A : C.Obj) →
                  D.Invertible (η ([C,D].to i) A)

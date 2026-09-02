@@ -79,11 +79,15 @@ where it writes `α ⨟ β` the Agda reads `β • α`.
 - `adjunction/PseudonaturalTransformation.agda` — pseudonatural
   transformations between pseudofunctors: the naturality square commutes only
   up to an invertible 2-cell.
+- `adjunction/Biadjunction.agda` — biadjunctions, as a pair of pseudofunctors
+  together with a pseudonatural family of equivalences `D (L A , B) ≃ C (A , R B)`.
 - `universal1.tex`, `universal2.tex` — the notes the two formulations
   transcribe.
 
-Dependency order: `Category → Functor → Bifunctor → Universal`, and
-`Category → Bicategory → Bifunctor`.
+Dependency order: `Category → Functor → Bicategory → Bifunctor → Universal`;
+in `adjunction/`, `NaturalTransformation → Adjunction`,
+`Bifunctor → PseudonaturalTransformation`, and `Biadjunction` on top of
+`Bifunctor`, `NaturalTransformation` and `Adjunction`.
 
 ## Building
 
@@ -114,10 +118,12 @@ Tested with Agda 2.8.0 and agda-stdlib v2.4.
 The equivalence is complete. There is as yet no example instance of either
 record, so the definitions have never been exercised on a concrete bicategory,
 and none of the special cases the notes are aiming at — terminal objects,
-adjunctions — have been derived. Pseudonatural transformations are defined but
-not yet exercised either: there is no identity and no vertical composition of
-them (the identity one needs Kelly's lemma `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is
-not available yet). Composition of pseudofunctors is also still missing.
+adjunctions — have been derived. Pseudonatural transformations and
+biadjunctions are defined but not yet exercised either: there is no identity
+and no vertical composition of pseudonatural transformations (the identity one
+needs Kelly's lemma `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is not available yet), and
+no example of a biadjunction. Composition of pseudofunctors, modifications and
+the unit-counit formulation of a biadjunction are also still missing.
 
 ## Tool disclosure
 
