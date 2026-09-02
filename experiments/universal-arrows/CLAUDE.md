@@ -60,13 +60,16 @@ blocked on Kelly's lemma (`unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`), which `Bicateg
 does not prove.
 
 Biadjunctions (`adjunction/Biadjunction.agda`) are defined in the hom-wise
-formulation, again with no instance.
+formulation, again with no instance, and
+`adjunction/UniversalBiadjunction.agda` defines the pointwise presentation
+(a biuniversal arrow to every object). Nothing connects the two yet.
 
 Not done yet: composition of bifunctors (`_∘F_` exists for ordinary functors,
 but the pseudofunctor case requires building the compositor of a composite and
 is a real proof), modifications, the unit-counit formulation of a biadjunction
-(which needs both of those), and the special cases the notes are aiming at
-(terminal objects, adjunctions).
+(which needs both of those), the passage from a `UniversalBiadjunction` to a
+`Biadjunction` (which needs `R` as a `Bifunctor`, hence its compositor), and
+the special cases the notes are aiming at (terminal objects, adjunctions).
 
 ## Architecture
 
@@ -267,6 +270,25 @@ and, in `adjunction/`, `NaturalTransformation → Adjunction` and
   images of each other; that asymmetry is expected, not a transcription slip.
 
   Notation: `L ⊣₂ R`, mirroring `_⊣_` in `adjunction/Adjunction.agda`.
+
+- **`adjunction/UniversalBiadjunction.agda`** — `record
+  UniversalBiadjunction (F : Bifunctor C D)` with the single field
+  `universal : (y : D.Obj) → Universal F y`: the pointwise way of saying that
+  `F` has a right biadjoint. `universalHA` re-reads the same data in the
+  algebraic formulation, through `Universal→UniversalHA`.
+
+  The rest of the record is the family opened at a variable object:
+  `private module U (y : D.Obj) = Universal (universal y)`, and then `R₀`, `u`
+  (the universal 1-cell), `⇑₁`, `ε`, `⇑₂`, `η` and their laws re-exported with
+  `y` turned *implicit*, since it is determined by the 1-cell being
+  transposed. That is the only real design decision in the file: `U.ε y f` is
+  unusable in practice, `ε f` reads like the `Universal` it comes from.
+
+  Then the beginnings of the right biadjoint: `R₁ g = ⇑₁ (g ∘₁ u y)` and
+  `R₂ β = ⇑₂ ((β ▷ u y) • ε (g ∘₁ u y))`, with `R₂-cong`. These are data only
+  — no functoriality is proved, and none is needed to state the record. Making
+  `R` a `Bifunctor`, and hence relating this record to `Biadjunction`, is the
+  next step and a real proof.
 
 ## Conventions
 

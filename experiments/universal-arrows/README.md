@@ -81,6 +81,9 @@ where it writes `α ⨟ β` the Agda reads `β • α`.
   up to an invertible 2-cell.
 - `adjunction/Biadjunction.agda` — biadjunctions, as a pair of pseudofunctors
   together with a pseudonatural family of equivalences `D (L A , B) ≃ C (A , R B)`.
+- `adjunction/UniversalBiadjunction.agda` — the pointwise presentation: a
+  pseudofunctor admitting a biuniversal arrow to every object, i.e. having a
+  right biadjoint.
 - `universal1.tex`, `universal2.tex` — the notes the two formulations
   transcribe.
 
@@ -122,8 +125,12 @@ adjunctions — have been derived. Pseudonatural transformations and
 biadjunctions are defined but not yet exercised either: there is no identity
 and no vertical composition of pseudonatural transformations (the identity one
 needs Kelly's lemma `unitˡ⇒ id₁ ≈ unitʳ⇒ id₁`, which is not available yet), and
-no example of a biadjunction. Composition of pseudofunctors, modifications and
-the unit-counit formulation of a biadjunction are also still missing.
+no example of a biadjunction. The two presentations of a biadjunction are not
+connected either: `UniversalBiadjunction` yields `R₀`, `R₁` and `R₂`, but
+turning those into a `Bifunctor` and then into a `Biadjunction` needs the
+compositor of `R` and is a real proof. Composition of pseudofunctors,
+modifications and the unit-counit formulation of a biadjunction are also still
+missing.
 
 ## Tool disclosure
 
