@@ -77,7 +77,8 @@ notes are aiming at (terminal objects, adjunctions).
 ## Architecture
 
 Dependency order: `Category → Functor → Bicategory → Bifunctor → Universal`,
-and, in `adjunction/`, `NaturalTransformation → Adjunction` and
+and, in `adjunction/`, `Pasting` (on `Bicategory`),
+`NaturalTransformation → Adjunction` and
 `Bifunctor → PseudonaturalTransformation`, with `Biadjunction` on top of
 `Bifunctor`, `NaturalTransformation` and `Adjunction`.
 
@@ -147,16 +148,6 @@ and, in `adjunction/`, `NaturalTransformation → Adjunction` and
      `unitˡ⇐-∘`, `unitʳ⇐-∘`, `triangle⇐`. These are *consequences* of the
      triangle and the pentagon, not axioms; `unitˡ-∘` is proved by Kelly's
      argument (compare the two sides after whiskering by `id₁`).
-  8. Pasting of squares. A square is a 2-cell `u₂ ∘ p ⇒ q ∘ u₁`; `paste`
-     composes two of them side by side and `paste-assoc` says that pasting is
-     associative up to the associators of the two rows — four pentagon
-     instances and three associator naturalities. `paste-cong`, `paste-▷` and
-     `paste-◁` absorb a 2-cell of the top or bottom row into the neighbouring
-     square. `fpaste` and its `fpaste-assoc`/`fpaste-cong`/`fpaste-▷`/
-     `fpaste-◁` are the same for a *final* square `u₁ ∘ p₁ ⇒ q₁`, which is the
-     shape `ε` has. This section exists for
-     `adjunction/UniversalToBiadjunction.agda`: every coherence proof there is
-     a pasting identity.
 
   There is deliberately **no example instance**: the derived lemmas play that
   role. `∗-decomposeˡ`, `exchange` and the `⇐`-naturalities do not type-check
@@ -243,6 +234,22 @@ and, in `adjunction/`, `NaturalTransformation → Adjunction` and
 
   Do **not** `open Universal public`: the two records deliberately share field
   names, so access stays qualified (`U.ε`, `Universal.⇑₂-β R α`).
+
+- **`adjunction/Pasting.agda`** — pasting of squares in a bicategory, as
+  `module Pasting (B : Bicategory …)` (the contents used to be a section of
+  `Bicategory.agda`). A square is a 2-cell `u₂ ∘ p ⇒ q ∘ u₁`; `paste` composes
+  two of them side by side and `paste-assoc` says that pasting is associative
+  up to the associators of the two rows — four pentagon instances and three
+  associator naturalities. `paste-cong`, `paste-▷` and `paste-◁` absorb a
+  2-cell of the top or bottom row into the neighbouring square. `fpaste` and
+  its `fpaste-assoc`/`fpaste-cong`/`fpaste-▷`/`fpaste-◁` are the same for a
+  *final* square `u₁ ∘ p₁ ⇒ q₁`, which is the shape `ε` has. The file exists
+  for `adjunction/UniversalToBiadjunction.agda`, its only importer: every
+  coherence proof there is a pasting identity. Since the module and the record
+  module of `Bicategory` cannot be merged, importers write
+  `open Past using (module Pasting)` and then
+  `private module D-P = Pasting D`, so the lemmas read `D-P.paste` beside
+  `D.assoc⇒`.
 
 - **`adjunction/PseudonaturalTransformation.agda`** — pseudonatural
   transformations `τ : F ⇒ G` between two `Bifunctor C D`. Data: the component
