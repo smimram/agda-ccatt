@@ -24,6 +24,8 @@ import adjunction.Adjunction as Adj
 open Adj using (Adjunction; Equivalence; _⊣_)
 import adjunction.Biadjunction as Biadj
 open Biadj using (Biadjunction; _⊣₂_)
+import adjunction.Pasting as Past
+open Past using (module Pasting)
 
 private
   variable
@@ -38,6 +40,7 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
   private module C = Bicategory C
   private module D = Bicategory D
   private module F = Bifunctor F
+  private module D-P = Pasting D
 
   open UniversalBiadjunction UB
 
@@ -1141,7 +1144,7 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
   -- R-P is the pasting of two ε-squares, followed by the comparison of F
   R-P-paste : {y y' y'' : D.Obj} (g' : y' D.⇒₁ y'') (g : y D.⇒₁ y') →
               R-P g' g
-              D.≈ D.paste (u y) (u y') (u y'') (F.F₁ (R₁ g)) (F.F₁ (R₁ g')) g g'
+              D.≈ D-P.paste (u y) (u y') (u y'') (F.F₁ (R₁ g)) (F.F₁ (R₁ g')) g g'
                     (ε (g' D.∘₁ u y')) (ε (g D.∘₁ u y))
                   D.• (u y'' D.◁ F.F-∘⇐ (R₁ g') (R₁ g))
   R-P-paste g' g =
@@ -1272,9 +1275,9 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
       WA = w (C.assoc⇒ A B H)
 
       Y  = u₃ D.◁ F.F-∘⇐ (A C.∘₁ B) H
-      pfg = D.paste u₁ u₂ u₃ FB FA g f εf εg
-      pgh = D.paste u₀ u₁ u₂ FH FB h g εg εh
-      Q   = D.paste u₀ u₂ u₃ (FB D.∘₁ FH) FA (g D.∘₁ h) f εf pgh
+      pfg = D-P.paste u₁ u₂ u₃ FB FA g f εf εg
+      pgh = D-P.paste u₀ u₁ u₂ FH FB h g εg εh
+      Q   = D-P.paste u₀ u₂ u₃ (FB D.∘₁ FH) FA (g D.∘₁ h) f εf pgh
 
       tailL = (u₃ D.◁ D.assoc⇒ FA FB FH) D.•
                 ((u₃ D.◁ (F.F-∘⇐ A B D.▷ FH)) D.• Y)
@@ -1330,50 +1333,50 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
         (D.assoc⇒ f g h D.▷ u₀) D.• (R-P (f D.∘₁ g) h D.• WL)
           ≈⟨ D.•-congʳ (D.•-congˡ (R-P-paste (f D.∘₁ g) h)) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
+          ((D-P.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
             D.• (u₃ D.◁ F.F-∘⇐ (R₁ (f D.∘₁ g)) H)) D.• WL)
           ≈⟨ D.•-congʳ D.•-assoc ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          (D.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
+          (D-P.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
             D.• ((u₃ D.◁ F.F-∘⇐ (R₁ (f D.∘₁ g)) H) D.• WL))
           ≈⟨ D.•-congʳ (D.•-congʳ LA) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          (D.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
+          (D-P.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
             D.• ((u₃ D.◁ (F.F₂ (R-∘⇒ f g) D.▷ FH)) D.• Y))
           ≈⟨ D.•-congʳ (D.≈-sym D.•-assoc) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
+          ((D-P.paste u₀ u₁ u₃ FH (F.F₁ (R₁ (f D.∘₁ g))) h (f D.∘₁ g) εfg εh
             D.• (u₃ D.◁ (F.F₂ (R-∘⇒ f g) D.▷ FH))) D.• Y)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.paste-▷ u₀ u₁ u₃ FH
+          ≈⟨ D.•-congʳ (D.•-congˡ (D-P.paste-▷ u₀ u₁ u₃ FH
                 (F.F₁ (R₁ (f D.∘₁ g))) (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
                 εfg εh (F.F₂ (R-∘⇒ f g)))) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
+          ((D-P.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
              (εfg D.• (u₃ D.◁ F.F₂ (R-∘⇒ f g))) εh) D.• Y)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.paste-cong u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B))
+          ≈⟨ D.•-congʳ (D.•-congˡ (D-P.paste-cong u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B))
                 h (f D.∘₁ g) (⇑₂-β (R-P f g)) D.≈-refl)) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g) (R-P f g) εh) D.• Y)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.paste-cong u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B))
+          ((D-P.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g) (R-P f g) εh) D.• Y)
+          ≈⟨ D.•-congʳ (D.•-congˡ (D-P.paste-cong u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B))
                 h (f D.∘₁ g) (R-P-paste f g) D.≈-refl)) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
+          ((D-P.paste u₀ u₁ u₃ FH (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
              (pfg D.• (u₃ D.◁ F.F-∘⇐ A B)) εh) D.• Y)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.≈-sym (D.paste-▷ u₀ u₁ u₃ FH
+          ≈⟨ D.•-congʳ (D.•-congˡ (D.≈-sym (D-P.paste-▷ u₀ u₁ u₃ FH
                 (FA D.∘₁ FB) (F.F₁ (A C.∘₁ B)) h (f D.∘₁ g)
                 pfg εh (F.F-∘⇐ A B)))) ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          ((D.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh
+          ((D-P.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh
             D.• (u₃ D.◁ (F.F-∘⇐ A B D.▷ FH))) D.• Y)
           ≈⟨ D.•-congʳ D.•-assoc ⟩
         (D.assoc⇒ f g h D.▷ u₀) D.•
-          (D.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh
+          (D-P.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh
             D.• ((u₃ D.◁ (F.F-∘⇐ A B D.▷ FH)) D.• Y))
           ≈⟨ D.≈-sym D.•-assoc ⟩
         ((D.assoc⇒ f g h D.▷ u₀) D.•
-          D.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh)
+          D-P.paste u₀ u₁ u₃ FH (FA D.∘₁ FB) h (f D.∘₁ g) pfg εh)
           D.• ((u₃ D.◁ (F.F-∘⇐ A B D.▷ FH)) D.• Y)
-          ≈⟨ D.•-congˡ (D.paste-assoc u₀ u₁ u₂ u₃ FH FB FA h g f εf εg εh) ⟩
+          ≈⟨ D.•-congˡ (D-P.paste-assoc u₀ u₁ u₂ u₃ FH FB FA h g f εf εg εh) ⟩
         (Q D.• (u₃ D.◁ D.assoc⇒ FA FB FH))
           D.• ((u₃ D.◁ (F.F-∘⇐ A B D.▷ FH)) D.• Y)
           ≈⟨ D.•-assoc ⟩
@@ -1383,41 +1386,41 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
       mainR = begin
         R-P f (g D.∘₁ h) D.• (WR D.• WA)
           ≈⟨ D.•-congˡ (R-P-paste f (g D.∘₁ h)) ⟩
-        (D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        (D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• (u₃ D.◁ F.F-∘⇐ A (R₁ (g D.∘₁ h)))) D.• (WR D.• WA)
           ≈⟨ D.•-assoc ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• ((u₃ D.◁ F.F-∘⇐ A (R₁ (g D.∘₁ h))) D.• (WR D.• WA))
           ≈⟨ D.•-congʳ (D.≈-sym D.•-assoc) ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• (((u₃ D.◁ F.F-∘⇐ A (R₁ (g D.∘₁ h))) D.• WR) D.• WA)
           ≈⟨ D.•-congʳ (D.•-congˡ RA) ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• (((u₃ D.◁ (FA D.◁ F.F₂ (R-∘⇒ g h)))
                 D.• (u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H))) D.• WA)
           ≈⟨ D.•-congʳ D.•-assoc ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• ((u₃ D.◁ (FA D.◁ F.F₂ (R-∘⇒ g h)))
                 D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA))
           ≈⟨ D.≈-sym D.•-assoc ⟩
-        (D.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
+        (D-P.paste u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h))) FA (g D.∘₁ h) f εf εgh
           D.• (u₃ D.◁ (FA D.◁ F.F₂ (R-∘⇒ g h))))
           D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA)
-          ≈⟨ D.•-congˡ (D.paste-◁ u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h)))
+          ≈⟨ D.•-congˡ (D-P.paste-◁ u₀ u₂ u₃ (F.F₁ (R₁ (g D.∘₁ h)))
                 (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf εgh (F.F₂ (R-∘⇒ g h))) ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf
+        D-P.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf
           (εgh D.• (u₂ D.◁ F.F₂ (R-∘⇒ g h)))
           D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA)
-          ≈⟨ D.•-congˡ (D.paste-cong u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f
+          ≈⟨ D.•-congˡ (D-P.paste-cong u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f
                 D.≈-refl (⇑₂-β (R-P g h))) ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf (R-P g h)
+        D-P.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf (R-P g h)
           D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA)
-          ≈⟨ D.•-congˡ (D.paste-cong u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f
+          ≈⟨ D.•-congˡ (D-P.paste-cong u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f
                 D.≈-refl (R-P-paste g h)) ⟩
-        D.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf
+        D-P.paste u₀ u₂ u₃ (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf
           (pgh D.• (u₂ D.◁ F.F-∘⇐ B H))
           D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA)
-          ≈⟨ D.•-congˡ (D.≈-sym (D.paste-◁ u₀ u₂ u₃ (FB D.∘₁ FH)
+          ≈⟨ D.•-congˡ (D.≈-sym (D-P.paste-◁ u₀ u₂ u₃ (FB D.∘₁ FH)
                 (F.F₁ (B C.∘₁ H)) FA (g D.∘₁ h) f εf pgh (F.F-∘⇐ B H))) ⟩
         (Q D.• (u₃ D.◁ (FA D.◁ F.F-∘⇐ B H)))
           D.• ((u₃ D.◁ F.F-∘⇐ A (B C.∘₁ H)) D.• WA)
@@ -2864,7 +2867,7 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
   -- Pʳ is the pasting of an ε-square with a final ε-square
   Pʳ-fpaste : {x : C.Obj} {y y' : D.Obj} (g : y D.⇒₁ y') (k : F.F₀ x D.⇒₁ y) →
               Pʳ g k
-              D.≈ D.fpaste (u y) (u y') (F.F₁ (⇑₁ k)) (F.F₁ (R₁ g)) k g
+              D.≈ D-P.fpaste (u y) (u y') (F.F₁ (⇑₁ k)) (F.F₁ (R₁ g)) k g
                     (ε (g D.∘₁ u y)) (ε k)
                   D.• (u y' D.◁ F.F-∘⇐ (R₁ g) (⇑₁ k))
   Pʳ-fpaste g k =
@@ -2898,9 +2901,9 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
       A    = D.assoc⇒ g' g h
       ψ    = F.F₂ (R-∘⇒ g' g)
       φ    = F.F₂ (Φ-natʳ⇐ g h)
-      pst  = D.paste u₀ u₁ u₂ FRg FRg' g g' εg' εg
-      Qf   = D.fpaste u₁ u₂ (FRg D.∘₁ FH) FRg' (g D.∘₁ h) g' εg'
-               (D.fpaste u₀ u₁ FH FRg h g εg εh)
+      pst  = D-P.paste u₀ u₁ u₂ FRg FRg' g g' εg' εg
+      Qf   = D-P.fpaste u₁ u₂ (FRg D.∘₁ FH) FRg' (g D.∘₁ h) g' εg'
+               (D-P.fpaste u₀ u₁ FH FRg h g εg εh)
       T₂   = u₂ D.◁ F.F-∘⇐ (Rg' C.∘₁ Rg) H
 
       R-∘-inv : C.Invertible₂ (R-∘⇒ g' g)
@@ -2927,7 +2930,7 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
       leftRed = begin
         (A D.• Pʳ (g' D.∘₁ g) h) D.• w (R-∘⇒ g' g C.▷ H)
           ≈⟨ D.•-congˡ (D.•-congʳ (Pʳ-fpaste (g' D.∘₁ g) h)) ⟩
-        (A D.• (D.fpaste u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g))) h (g' D.∘₁ g)
+        (A D.• (D-P.fpaste u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g))) h (g' D.∘₁ g)
                   εgg' εh
                 D.• (u₂ D.◁ F.F-∘⇐ (R₁ (g' D.∘₁ g)) H)))
           D.• w (R-∘⇒ g' g C.▷ H)
@@ -2941,30 +2944,30 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
                                     (F.F-∘⇐ (Rg' C.∘₁ Rg) H))
                           (D.•-congˡ (D.◁-cong u₂
                             (D.∗-cong D.≈-refl F.F₂-id₂))))))))) ⟩
-        A D.• (D.fpaste u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g))) h (g' D.∘₁ g) εgg' εh
+        A D.• (D-P.fpaste u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g))) h (g' D.∘₁ g) εgg' εh
           D.• ((u₂ D.◁ (ψ D.▷ FH)) D.• T₂))
           ≈⟨ D.•-congʳ (D.≈-trans (D.≈-sym D.•-assoc)
-               (D.•-congˡ (D.fpaste-▷ u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g)))
+               (D.•-congˡ (D-P.fpaste-▷ u₀ u₂ FH (F.F₁ (R₁ (g' D.∘₁ g)))
                  (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g) εgg' εh ψ))) ⟩
-        A D.• (D.fpaste u₀ u₂ FH (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
+        A D.• (D-P.fpaste u₀ u₂ FH (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
                  (εgg' D.• (u₂ D.◁ ψ)) εh
           D.• T₂)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.fpaste-cong u₀ u₂ FH
+          ≈⟨ D.•-congʳ (D.•-congˡ (D-P.fpaste-cong u₀ u₂ FH
                (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
                (D.≈-trans (⇑₂-β (R-P g' g)) (R-P-paste g' g)) D.≈-refl)) ⟩
-        A D.• (D.fpaste u₀ u₂ FH (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
+        A D.• (D-P.fpaste u₀ u₂ FH (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
                  (pst D.• (u₂ D.◁ F.F-∘⇐ Rg' Rg)) εh
           D.• T₂)
-          ≈⟨ D.•-congʳ (D.•-congˡ (D.≈-sym (D.fpaste-▷ u₀ u₂ FH
+          ≈⟨ D.•-congʳ (D.•-congˡ (D.≈-sym (D-P.fpaste-▷ u₀ u₂ FH
                (FRg' D.∘₁ FRg) (F.F₁ (Rg' C.∘₁ Rg)) h (g' D.∘₁ g)
                pst εh (F.F-∘⇐ Rg' Rg)))) ⟩
-        A D.• ((D.fpaste u₀ u₂ FH (FRg' D.∘₁ FRg) h (g' D.∘₁ g) pst εh
+        A D.• ((D-P.fpaste u₀ u₂ FH (FRg' D.∘₁ FRg) h (g' D.∘₁ g) pst εh
                  D.• (u₂ D.◁ (F.F-∘⇐ Rg' Rg D.▷ FH)))
           D.• T₂)
           ≈⟨ D.≈-trans (D.•-congʳ D.•-assoc) (D.≈-sym D.•-assoc) ⟩
-        (A D.• D.fpaste u₀ u₂ FH (FRg' D.∘₁ FRg) h (g' D.∘₁ g) pst εh) D.•
+        (A D.• D-P.fpaste u₀ u₂ FH (FRg' D.∘₁ FRg) h (g' D.∘₁ g) pst εh) D.•
           ((u₂ D.◁ (F.F-∘⇐ Rg' Rg D.▷ FH)) D.• T₂)
-          ≈⟨ D.•-congˡ (D.fpaste-assoc u₀ u₁ u₂ FH FRg FRg' h g g' εg' εg εh) ⟩
+          ≈⟨ D.•-congˡ (D-P.fpaste-assoc u₀ u₁ u₂ FH FRg FRg' h g g' εg' εg εh) ⟩
         (Qf D.• (u₂ D.◁ D.assoc⇒ FRg' FRg FH)) D.•
           ((u₂ D.◁ (F.F-∘⇐ Rg' Rg D.▷ FH)) D.• T₂) ∎
 
@@ -2977,7 +2980,7 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
         Pʳ g' (g D.∘₁ h) D.•
           (w (Rg' C.◁ Φ-natʳ⇐ g h) D.• w (C.assoc⇒ Rg' Rg H))
           ≈⟨ D.•-congˡ (Pʳ-fpaste g' (g D.∘₁ h)) ⟩
-        (D.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
+        (D-P.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
            (ε (g D.∘₁ h))
           D.• (u₂ D.◁ F.F-∘⇐ Rg' (⇑₁ (g D.∘₁ h)))) D.•
           (w (Rg' C.◁ Φ-natʳ⇐ g h) D.• w (C.assoc⇒ Rg' Rg H))
@@ -2991,30 +2994,30 @@ module _ {C : Bicategory o  ℓ₁  ℓ₂  e }
                                     (F.F-∘⇐ Rg' (Rg C.∘₁ H)))
                           (D.•-congˡ (D.◁-cong u₂
                             (D.∗-cong F.F₂-id₂ D.≈-refl))))))))) ⟩
-        D.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
+        D-P.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
           (ε (g D.∘₁ h)) D.•
           (((u₂ D.◁ (FRg' D.◁ φ)) D.• (u₂ D.◁ F.F-∘⇐ Rg' (Rg C.∘₁ H))) D.•
             w (C.assoc⇒ Rg' Rg H))
           ≈⟨ D.•-congʳ D.•-assoc ⟩
-        D.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
+        D-P.fpaste u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h))) FRg' (g D.∘₁ h) g' εg'
           (ε (g D.∘₁ h)) D.•
           ((u₂ D.◁ (FRg' D.◁ φ)) D.•
             ((u₂ D.◁ F.F-∘⇐ Rg' (Rg C.∘₁ H)) D.• w (C.assoc⇒ Rg' Rg H)))
           ≈⟨ D.≈-trans (D.≈-sym D.•-assoc)
-             (D.•-congˡ (D.fpaste-◁ u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h)))
+             (D.•-congˡ (D-P.fpaste-◁ u₁ u₂ (F.F₁ (⇑₁ (g D.∘₁ h)))
                (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg' (ε (g D.∘₁ h)) φ)) ⟩
-        D.fpaste u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg'
+        D-P.fpaste u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg'
           (ε (g D.∘₁ h) D.• (u₁ D.◁ φ)) D.•
           ((u₂ D.◁ F.F-∘⇐ Rg' (Rg C.∘₁ H)) D.• w (C.assoc⇒ Rg' Rg H))
-          ≈⟨ D.•-congˡ (D.fpaste-cong u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg'
+          ≈⟨ D.•-congˡ (D-P.fpaste-cong u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg'
                (g D.∘₁ h) g' D.≈-refl
                (D.≈-trans (⇑₂-β (Pʳ g h)) (Pʳ-fpaste g h))) ⟩
-        D.fpaste u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg'
-          (D.fpaste u₀ u₁ FH FRg h g εg εh D.• (u₁ D.◁ F.F-∘⇐ Rg H)) D.•
+        D-P.fpaste u₁ u₂ (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg'
+          (D-P.fpaste u₀ u₁ FH FRg h g εg εh D.• (u₁ D.◁ F.F-∘⇐ Rg H)) D.•
           ((u₂ D.◁ F.F-∘⇐ Rg' (Rg C.∘₁ H)) D.• w (C.assoc⇒ Rg' Rg H))
-          ≈⟨ D.•-congˡ (D.≈-sym (D.fpaste-◁ u₁ u₂ (FRg D.∘₁ FH)
+          ≈⟨ D.•-congˡ (D.≈-sym (D-P.fpaste-◁ u₁ u₂ (FRg D.∘₁ FH)
                (F.F₁ (Rg C.∘₁ H)) FRg' (g D.∘₁ h) g' εg'
-               (D.fpaste u₀ u₁ FH FRg h g εg εh) (F.F-∘⇐ Rg H))) ⟩
+               (D-P.fpaste u₀ u₁ FH FRg h g εg εh) (F.F-∘⇐ Rg H))) ⟩
         (Qf D.• (u₂ D.◁ (FRg' D.◁ F.F-∘⇐ Rg H))) D.•
           ((u₂ D.◁ F.F-∘⇐ Rg' (Rg C.∘₁ H)) D.•
             (u₂ D.◁ F.F₂ (C.assoc⇒ Rg' Rg H))) ∎
